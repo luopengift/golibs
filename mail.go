@@ -5,7 +5,7 @@ import (
         "strings"
 )
 
-func SendToMail(username, password, host, receivers, subject, body, mailtype string) error {
+func SendToMail(username, password, host, to, subject, body, mailtype string) error {
         auth := smtp.PlainAuth("", username, password, strings.Split(host, ":")[0])
         var contentType string
         if mailtype == "html" {
@@ -14,6 +14,6 @@ func SendToMail(username, password, host, receivers, subject, body, mailtype str
                 contentType = "Content-Type: text/plain" + "; charset=UTF-8"
         }
         msg := []byte("To: " + to + "\r\n" + "From: " + username + ">\r\nSubject: " + "\r\n" + contentType + "\r\n\r\n" + body)
-        err := smtp.SendMail(host, auth, username, strings.Split(receviers, ";"), msg)
+        err := smtp.SendMail(host, auth, username, strings.Split(to, ";"), msg)
         return err
 }
