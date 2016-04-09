@@ -1,7 +1,8 @@
-package golibs
+package main
 
 import (
     "net/smtp"
+    "fmt"
     "strings"
 )
 
@@ -18,7 +19,7 @@ type Mail struct {
     Body    string
 }
 
-func SendMail(server SMTPServer, mail Mail) error {
+func SendMail(server SMTPServer, mail Mail) bool {
     auth := smtp.PlainAuth("", server.Sender, server.Passwd, strings.Split(server.Server, ":")[0])
     var Type string
     switch mail.Type {
@@ -27,7 +28,11 @@ func SendMail(server SMTPServer, mail Mail) error {
     default:
         Type = "Content-Type: text/plain" + "; charset=UTF-8"
     }
-    msg := []byte("To: " + mail.To + "\r\n" + "From: " + server.Sender + ">\r\n" + "Subject: " + "\r\n" + Type + "\r\n\r\n" + mail.Body)
+    msg := []byte("To: " + mail.To + "\r\n" + "From: " + server.Sender + ">\r\n" + "Subject: " + mail.Subject + "\r\n" + Type + "\r\n\r\n" + mail.Body)
     err := smtp.SendMail(server.Server, auth, server.Sender, strings.Split(mail.To, ";"), msg)
-    return err
+    if err != nil{
+        fmt.Println(err)
+        return false
+    }
+    return true
 }
