@@ -1,9 +1,9 @@
-package main
+package golibs
 
 import (
-    "net/smtp"
     "fmt"
     "strings"
+    "net/smtp"
 )
 
 type SMTPServer struct {
