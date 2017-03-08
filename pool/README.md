@@ -15,7 +15,7 @@ func main() {
     p := pool.NewPool(max_works)
     for i:=0;i<1000;i++ {
         go p.Run(func() error {
-            fmt.Println(pool)
+            fmt.Println(p)
             time.Sleep(1*time.Second)
             return nil
         })
