@@ -1,4 +1,4 @@
-package golibs
+package pool
 
 import (
 	"fmt"
