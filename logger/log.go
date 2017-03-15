@@ -112,7 +112,7 @@ func Fatal(format string, msg ...interface{}) {
 }
 func Panic(format string, msg ...interface{}) {
 	MyLogger.writeLog(PANIC, format, msg...)
-	panic("<Panic>")
+	panic(fmt.Sprintf(format, msg...))
 }
 
 func init() {

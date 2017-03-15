@@ -5,4 +5,4 @@ some basic libs for golang
 1. set
 2. pool
 3. logger
-
+4. tail
