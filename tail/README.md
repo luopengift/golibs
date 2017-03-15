@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-    f := NewTail("test.log")
+    f := tail.NewTail("test.log")
     f.ReadLine()
     for v := range f.NextLine() {
         fmt.Println(*v) //NextLine返回行内容的地址
