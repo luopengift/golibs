@@ -1,9 +1,9 @@
-##简单日志模块
+## 简单日志模块
 
-####分级别(trace,debug,info,warn,error,fatal,panic),显示颜色。
-####TODO:增加其他输出方式
+#### 分级别(trace,debug,info,warn,error,fatal,panic),显示颜色。
+#### TODO:增加其他输出方式
 
-###使用例子:
+### 使用例子:
 ```
 package main
 
