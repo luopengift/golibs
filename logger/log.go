@@ -92,6 +92,22 @@ func (self *Logger) output(format string, msg ...interface{}) {
 
 var MyLogger *Logger
 
+func SetLevel(lv uint8) {
+	MyLogger.lv = lv
+}
+
+func SetPrefix(prefix bool) {
+	MyLogger.prefix = prefix
+}
+
+func SetColor(color bool) {
+	MyLogger.color = color
+}
+
+func SetOutput(out ...io.Writer) {
+	MyLogger.out = out
+}
+
 func Trace(format string, msg ...interface{}) {
 	MyLogger.writeLog(TRACE, format, msg...)
 }
