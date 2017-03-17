@@ -8,35 +8,31 @@ import (
 
 type File struct {
 	name  string
+	model int
 	inode uint64
 	fd    *os.File
 	seek  int64
 }
 
-func NewFile(name string) *File {
-	file := &File{}
-
-	file.name = name
-
-	fd, err := file.Open()
-	if err != nil {
-		logger.Error("<file %s can not open>:%v", name, err)
-		return nil
-	}
-	file.fd = fd
-
-	inode, err := file.Inode()
-	if err != nil {
-		logger.Error("< %s can not get inode>:%v", name, err)
-		return nil
-	}
-	file.inode = inode
-
+func NewFile(name string, model int) *File {
+	file := &File{name: name, model: model}
+	file.Open()
 	return file
 }
 
-func (self *File) Open() (*os.File, error) {
-	return os.OpenFile(self.name, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0660)
+func (self *File) Open() (err error) {
+	self.fd, err = os.OpenFile(self.name, self.model, 0660)
+	if err != nil {
+		logger.Error("<file %s can not open>:%v", self.name, err)
+		return err
+	}
+
+	self.inode, err = self.Inode()
+	if err != nil {
+		logger.Error("< %s can not get inode>:%v", self.name, err)
+		return err
+	}
+	return nil
 }
 
 func (self *File) Close() error {

@@ -11,15 +11,18 @@ import (
 
 type Tail struct {
 	*File
+	cname    string //config name
 	line     chan *string
 	reader   *bufio.Reader
 	interval int64
 }
 
-func NewTail(name string) *Tail {
-	file := NewFile(name)
+func NewTail(cname string) *Tail {
+	name := HandlerRule(cname)
+	file := NewFile(name, os.O_RDONLY)
 	return &Tail{
 		file,
+		cname,
 		make(chan *string),
 		bufio.NewReader(file.fd),
 		1000, //ms
@@ -29,18 +32,12 @@ func NewTail(name string) *Tail {
 func (self *Tail) ReOpen() {
 	if err := self.Close(); err != nil {
 		logger.Error("<file %v close fail:%v>", self.name, err)
-		return
 	}
-	fd, err := self.Open()
+	self.name = HandlerRule(self.cname)
+	err := self.Open()
 	if err != nil {
 		return
 	}
-	self.fd = fd
-	inode, err := self.Inode()
-	if err != nil {
-		return
-	}
-	self.inode = inode
 	self.reader = bufio.NewReader(self.fd)
 }
 
@@ -55,19 +52,26 @@ func (self *Tail) ReadLine() {
 			line, err := self.reader.ReadString('\n')
 			switch {
 			case err == io.EOF:
-				if inode, err := Inode(self.name); err != nil { //检测是否需要重新打开新的文件
-					logger.Debug("file %s get inode error:%v", self.name, err)
-					continue
+				time.Sleep(time.Duration(self.interval) * time.Millisecond)
+				if self.name == self.cname {
+					if inode, err := Inode(self.name); err != nil { //检测是否需要重新打开新的文件
+						continue
+					} else {
+						if inode != self.inode {
+							self.ReOpen()
+						}
+					}
 				} else {
-					logger.Debug("file get inode success:%v", inode)
-					if inode != self.inode {
-						logger.Debug("inode is not same%v,%v", inode, self.inode)
+					if self.name == HandlerRule(self.cname) { //检测是否需要按时间轮转新文件
+						continue
+					} else {
 						self.ReOpen()
 					}
 				}
-				time.Sleep(time.Duration(self.interval) * time.Millisecond)
+
 			case err != nil && err != io.EOF:
 				logger.Error("<Read file error:%v,%v>", line, err)
+				self.ReOpen()
 				continue
 			default:
 				msg := strings.TrimRight(line, "\n")
