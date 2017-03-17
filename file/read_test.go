@@ -3,7 +3,6 @@ package file
 import (
 	"fmt"
 	"testing"
-	"time"
 )
 
 func Test_read(t *testing.T) {
