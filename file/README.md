@@ -8,16 +8,18 @@
 package main
 
 import (
-    "github.com/luopengift/golibs/tail"
+    "github.com/luopengift/golibs/file"
     "fmt"
 )
 
 func main() {
-    f := tail.NewTail("test.log")
+    f := file.NewTail("test.log")
     f.ReadLine()
+
     for v := range f.NextLine() {
         fmt.Println(*v) //NextLine返回行内容的地址
     }
+
     f.Stop()
 }
 

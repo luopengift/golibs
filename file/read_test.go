@@ -1,13 +1,15 @@
-package tail
+package file
 
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
-func Test_tail(t *testing.T) {
+func Test_read(t *testing.T) {
 	tt := NewTail("test.log")
 	tt.ReadLine()
+
 	for v := range tt.NextLine() {
 		fmt.Println(*v)
 	}
