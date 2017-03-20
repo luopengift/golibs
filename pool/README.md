@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
-    var max_works int64 = 1000
-    p := pool.NewPool(max_works)
+    var max_works int64 = 100
+    p := pool.NewPool(max_works,nil)
     for i:=0;i<1000;i++ {
         go p.Run(func() error {
             fmt.Println(p)

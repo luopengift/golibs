@@ -7,11 +7,11 @@ import (
 )
 
 func Test_pool(t *testing.T) {
-	pool := NewPool(100)
+	pool := NewPool(100, nil)
 	for i := 0; i < 1000; i++ {
 		go pool.Run(func() error {
 			fmt.Println(pool)
-			time.Sleep(1 * time.Second)
+			time.Sleep(2 * time.Second)
 			return nil
 		})
 	}
