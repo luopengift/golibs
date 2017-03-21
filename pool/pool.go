@@ -21,31 +21,34 @@ func NewPool(max int64, v interface{}) *Pool {
 		cur:   0,
 		cnt:   0,
 	}
-	var i int64 = 0
-	for ; i < max; i++ {
-		pool.Put(v)
-	}
+	pool.Init(v)
 	return pool
 }
 
-func (self *Pool) Init() {}
+func (self *Pool) Init(v interface{}) *Pool {
+	var i int64 = 0
+	for ; i < self.max; i++ {
+		self.Put(v)
+	}
+	return self
+}
 
 func (self *Pool) String() string {
-	return fmt.Sprintf("<max:%d,cnt:%d,current:%d>", self.max, self.cnt, self.cur)
+	return fmt.Sprintf("<max:%d,cnt:%d,cur:%d>", self.max, self.cnt, self.cur)
 }
 
 func (self *Pool) Put(v interface{}) {
 	self.queue <- v
 	self.mux.Lock()
-	self.cur += 1
-	self.cnt += 1
+	self.cur = self.cur + 1
 	self.mux.Unlock()
 }
 
 func (self *Pool) Get() (v interface{}) {
 	v = <-self.queue
 	self.mux.Lock()
-	self.cur -= 1
+	self.cnt = self.cnt + 1
+	self.cur = self.cur - 1
 	self.mux.Unlock()
 	return
 }
@@ -53,7 +56,8 @@ func (self *Pool) Get() (v interface{}) {
 func (self *Pool) Wait() {
 	for {
 		switch self.cur {
-		case 0:
+		case self.max:
+			fmt.Println(self)
 			return
 		default:
 			continue
