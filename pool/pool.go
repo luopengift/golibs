@@ -8,9 +8,9 @@ import (
 type Pool struct {
 	mux   *sync.Mutex
 	queue chan interface{} //使用chan堵塞控制协程的最大数量
-	max   int64            //协程最大数量
-	cur   int64            //当前运行协程数量
-	cnt   int64            //启动协程的总数量
+	max   int64            //协程池最大数量
+	idle  int64            //当前协程池空闲数量
+	total int64            //启动协程的总数量
 }
 
 func NewPool(max int64, v interface{}) *Pool {
@@ -18,8 +18,8 @@ func NewPool(max int64, v interface{}) *Pool {
 		mux:   new(sync.Mutex),
 		queue: make(chan interface{}, max),
 		max:   max,
-		cur:   0,
-		cnt:   0,
+		idle:  0,
+		total: 0,
 	}
 	pool.Init(v)
 	return pool
@@ -34,28 +34,28 @@ func (self *Pool) Init(v interface{}) *Pool {
 }
 
 func (self *Pool) String() string {
-	return fmt.Sprintf("<max:%d,cnt:%d,cur:%d>", self.max, self.cnt, self.cur)
+	return fmt.Sprintf("<max:%d,total:%d,idle:%d>", self.max, self.total, self.idle)
 }
 
 func (self *Pool) Put(v interface{}) {
 	self.queue <- v
 	self.mux.Lock()
-	self.cur = self.cur + 1
+	self.idle = self.idle + 1
 	self.mux.Unlock()
 }
 
 func (self *Pool) Get() (v interface{}) {
 	v = <-self.queue
 	self.mux.Lock()
-	self.cnt = self.cnt + 1
-	self.cur = self.cur - 1
+	self.total = self.total + 1
+	self.idle = self.idle - 1
 	self.mux.Unlock()
 	return
 }
 
 func (self *Pool) Wait() {
 	for {
-		switch self.cur {
+		switch self.idle {
 		case self.max:
 			fmt.Println(self)
 			return
@@ -69,12 +69,12 @@ func (self *Pool) Hold() {
 	select {}
 }
 
-func (self *Pool) Number() int64 {
-	return self.cur
+func (self *Pool) Idle() int64 {
+	return self.idle
 }
 
-func (self *Pool) Count() int64 {
-	return self.cnt
+func (self *Pool) Total() int64 {
+	return self.total
 }
 
 func (self *Pool) Run(fn func() error) {
