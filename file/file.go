@@ -2,6 +2,7 @@ package file
 
 import (
 	"github.com/luopengift/golibs/logger"
+	"io/ioutil"
 	"os"
 	"syscall"
 )
@@ -37,6 +38,15 @@ func (self *File) Open() (err error) {
 
 func (self *File) Close() error {
 	return self.fd.Close()
+}
+
+func (self *File) Fd() *os.File {
+	return self.fd
+}
+
+func (self *File) ReadAll() (file []byte, err error) {
+	file, err = ioutil.ReadAll(self.fd)
+	return
 }
 
 func Inode(name string) (uint64, error) {
