@@ -1,8 +1,12 @@
 package set
 
+import (
+    "sync"
+)
+
 type Setter interface {
-	Add(e ...interface{}) error  //添加一个元素
-	Remove(e interface{}) error  //删除一个元素
+	Add(e ...interface{}) *Set  //添加一个元素
+	Remove(e interface{}) *Set  //删除一个元素
 	Clear() error                //清空所有元素
 	Contains(e interface{}) bool //
 	Elements() []interface{}     //获取元素集合
@@ -15,32 +19,46 @@ type Setter interface {
 
 type Set struct {
 	s map[interface{}]bool
+    mux *sync.RWMutex
 }
 
 func NewSet(e ...interface{}) *Set {
-	set := Set{s: make(map[interface{}]bool)}
+	set := Set{
+        s: make(map[interface{}]bool),
+        mux: new(sync.RWMutex),
+    }
 	set.Add(e...)
 	return &set
 }
 
-func (self *Set) Add(e ...interface{}) error {
+func (self *Set) Add(e ...interface{}) *Set {
+    self.mux.Lock()
 	for _, v := range e {
 		self.s[v] = true
 	}
-	return nil
+    self.mux.Unlock()
+    return self
 }
 
-func (self *Set) Remove(v interface{}) error {
+func (self *Set) Remove(v interface{}) *Set {
+    self.mux.Lock()
 	delete(self.s, v)
-	return nil
+    self.mux.Unlock()
+	return self
 }
 
 func (self *Set) Clear() error {
-	self = new(Set)
+	self.mux.Lock()
+    for k,_ := range self.s {
+        self.Remove(k)
+    }
+    self.mux.Unlock()
 	return nil
 }
 
 func (self *Set) Contains(v interface{}) bool {
+    self.mux.RLock()
+    defer self.mux.RUnlock()
 	return self.s[v]
 }
 
