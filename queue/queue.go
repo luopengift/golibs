@@ -10,10 +10,10 @@ type Queue struct {
 	queue chan interface{} //使用chan堵塞控制队列的最大数量
 	max   int64            //队列最大数量
 	idle  int64            //当前队列空闲数量
-	total int64            //启动队列总数量
+	total int64            //通过队列总数量
 }
 
-func NewQueue(max int64, v interface{}) *Queue {
+func NewQueue(max int64) *Queue {
 	queue := &Queue{
 		mux:   new(sync.Mutex),
 		queue: make(chan interface{}, max),
