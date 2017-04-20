@@ -12,7 +12,7 @@ import (
 
 func main() {
     var max_works int64 = 100
-    _ := queue.NewQueue(max_works,nil)
+    _ := queue.NewQueue(max_works)
 }
 
 ```
