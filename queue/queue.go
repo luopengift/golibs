@@ -36,13 +36,13 @@ func (self *Queue) Put() {
 	self.queue <- true
 	self.mux.Lock()
 	self.idle = self.idle - 1
+	self.total = self.total + 1
 	self.mux.Unlock()
 }
 
 func (self *Queue) Get() {
 	<-self.queue
 	self.mux.Lock()
-	self.total = self.total + 1
 	self.idle = self.idle + 1
 	self.mux.Unlock()
 }
