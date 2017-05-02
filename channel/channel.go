@@ -31,15 +31,15 @@ func (self *Channel) String() string {
 func (self *Channel) Close() {
     close(self.channel)
 }
-
-func (self *Channel) send() {
+//接收数据
+func (self *Channel) recv() {
 	self.mux.Lock()
 	self.idle = self.idle - 1
 	self.total = self.total + 1
 	self.mux.Unlock()
 }
-
-func (self *Channel) recv() {
+//从管道中读取数据
+func (self *Channel) send() {
 	self.mux.Lock()
 	self.idle = self.idle + 1
 	self.mux.Unlock()
@@ -59,7 +59,7 @@ func (self *Channel) Recv() (chan interface{}) {
 
 func (self *Channel) Put(v interface{}) {
 	self.channel <- v
-    self.send()
+    self.recv()
 }
 
 func (self *Channel) Add() {
@@ -68,7 +68,7 @@ func (self *Channel) Add() {
 
 func (self *Channel) Get() interface{} {
 	v := <-self.channel
-    self.recv()
+    self.send()
     return v
 }
 
