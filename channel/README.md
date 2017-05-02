@@ -5,14 +5,14 @@
 package main
 
 import (
-    "github.com/luopengift/golibs/queue"
+    "github.com/luopengift/golibs/channel"
     "time"
     "fmt"
 )
 
 func main() {
     var max_works int64 = 100
-    _ := queue.NewQueue(max_works)
+    _ := channel.NewChannel(max_works)
 }
 
 ```

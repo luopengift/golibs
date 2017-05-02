@@ -32,12 +32,34 @@ func (self *Channel) Close() {
     close(self.channel)
 }
 
-func (self *Channel) Put(v interface{}) {
-	self.channel <- v
+func (self *Channel) send() {
 	self.mux.Lock()
 	self.idle = self.idle - 1
 	self.total = self.total + 1
 	self.mux.Unlock()
+}
+
+func (self *Channel) recv() {
+	self.mux.Lock()
+	self.idle = self.idle + 1
+	self.mux.Unlock()
+}
+
+func (self *Channel) Send() (chan interface{}) {
+    self.send()
+    return self.channel
+}
+
+
+func (self *Channel) Recv() (chan interface{}) {
+    self.recv()
+    return self.channel
+}
+
+
+func (self *Channel) Put(v interface{}) {
+	self.channel <- v
+    self.send()
 }
 
 func (self *Channel) Add() {
@@ -46,9 +68,7 @@ func (self *Channel) Add() {
 
 func (self *Channel) Get() interface{} {
 	v := <-self.channel
-	self.mux.Lock()
-	self.idle = self.idle + 1
-	self.mux.Unlock()
+    self.recv()
     return v
 }
 
