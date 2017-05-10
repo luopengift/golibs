@@ -29,17 +29,17 @@ func NewTail(cname string) *Tail {
 	}
 }
 
-func (self *Tail) ReOpen() {
-	time.Sleep(time.Duration(self.interval) * time.Millisecond)
+func (self *Tail) ReOpen() error {
 	if err := self.Close(); err != nil {
 		logger.Error("<file %v close fail:%v>", self.name, err)
 	}
 	self.name = HandlerRule(self.cname)
 	err := self.Open()
 	if err != nil {
-		return
+		return err
 	}
 	self.reader = bufio.NewReader(self.fd)
+	return nil
 }
 
 func (self *Tail) Stop() {
@@ -53,7 +53,7 @@ func (self *Tail) ReadLine() {
 			line, err := self.reader.ReadString('\n')
 			switch {
 			case err == io.EOF:
-	            time.Sleep(time.Duration(self.interval) * time.Millisecond)
+				time.Sleep(time.Duration(self.interval) * time.Millisecond)
 				if self.name == self.cname {
 					if inode, err := Inode(self.name); err != nil { //检测是否需要重新打开新的文件
 						continue
@@ -71,6 +71,7 @@ func (self *Tail) ReadLine() {
 				}
 
 			case err != nil && err != io.EOF:
+				time.Sleep(time.Duration(self.interval) * time.Millisecond)
 				logger.Error("<Read file error:%v,%v>", line, err)
 				self.ReOpen()
 				continue
