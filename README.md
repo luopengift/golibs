@@ -6,3 +6,5 @@ some basic libs for golang
 2. pool
 3. logger
 4. file
+5. kafka
+6. channel

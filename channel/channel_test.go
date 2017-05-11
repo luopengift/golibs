@@ -11,7 +11,7 @@ func Test_channel(t *testing.T) {
 	//启动协程查看信息
 	go func() {
 		for {
-			fmt.Println(q)
+            fmt.Println(q)
 			time.Sleep(500 * time.Millisecond)
 		}
 	}()
