@@ -47,12 +47,16 @@ func (self *Tail) Stop() {
 	close(self.line)
 }
 
-func (self *Tail) ReadLine() {
+func (self *Tail) ReadLine(eof bool) {
 	go func() {
 		for {
 			line, err := self.reader.ReadString('\n')
 			switch {
 			case err == io.EOF:
+                if eof {
+                    logger.Warn("file is EOF")
+                    break
+                }
 				time.Sleep(time.Duration(self.interval) * time.Millisecond)
 				if self.name == self.cname {
 					if inode, err := Inode(self.name); err != nil { //检测是否需要重新打开新的文件
