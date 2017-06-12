@@ -55,7 +55,7 @@ func (self *Tail) ReadLine(eof bool) {
 			case err == io.EOF:
                 if eof {
                     logger.Warn("file is EOF")
-                    break
+                    return
                 }
 				time.Sleep(time.Duration(self.interval) * time.Millisecond)
 				if self.name == self.cname {
