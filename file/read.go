@@ -15,6 +15,11 @@ type Tail struct {
 	line     chan *string
 	reader   *bufio.Reader
 	interval int64
+
+	//EOF
+	//@ true: stop
+	//@ false: wait
+	endstop bool
 }
 
 func NewTail(cname string) *Tail {
@@ -26,7 +31,12 @@ func NewTail(cname string) *Tail {
 		make(chan *string),
 		bufio.NewReader(file.fd),
 		1000, //ms
+		false,
 	}
+}
+
+func (self *Tail) EndStop(b bool) {
+	self.endstop = b
 }
 
 func (self *Tail) ReOpen() error {
@@ -47,16 +57,16 @@ func (self *Tail) Stop() {
 	close(self.line)
 }
 
-func (self *Tail) ReadLine(eof bool) {
+func (self *Tail) ReadLine() {
 	go func() {
 		for {
 			line, err := self.reader.ReadString('\n')
 			switch {
 			case err == io.EOF:
-                if eof {
-                    logger.Warn("file is EOF")
-                    return
-                }
+				if self.endstop {
+					self.Stop()
+					return
+				}
 				time.Sleep(time.Duration(self.interval) * time.Millisecond)
 				if self.name == self.cname {
 					if inode, err := Inode(self.name); err != nil { //检测是否需要重新打开新的文件
