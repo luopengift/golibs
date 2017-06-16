@@ -4,6 +4,7 @@ import (
 	"github.com/luopengift/golibs/logger"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"syscall"
 )
 
@@ -24,8 +25,18 @@ func NewFile(name string, model int) *File {
 	return file
 }
 
+// 文件名称
 func (self *File) Name() string {
-    return self.name
+	return self.name
+}
+
+func (self *File) Dir() string {
+	return filepath.Dir(self.name)
+}
+
+// 文件名
+func (self *File) BaseName() string {
+	return filepath.Base(self.name)
 }
 
 func (self *File) Open() (err error) {
