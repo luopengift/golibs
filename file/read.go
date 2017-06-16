@@ -15,7 +15,6 @@ type Tail struct {
 	line     chan *string
 	reader   *bufio.Reader
 	interval int64
-	offset   int64
 
 	//EOF
 	//@ true: stop
@@ -32,7 +31,6 @@ func NewTail(cname string) *Tail {
 		make(chan *string),
 		bufio.NewReader(file.fd),
 		1000, //ms
-		0,
 		false,
 	}
 }
@@ -62,13 +60,13 @@ func (self *Tail) Stop() {
 func (self *Tail) ReadLine() {
 	go func() {
 
-		offset, err := self.TrancateOffsetByLF(self.offset)
+		offset, err := self.TrancateOffsetByLF(self.seek)
 		if err != nil {
-			logger.Error("<Trancate offset:%d,Error:%+v>", self.offset, err)
+			logger.Error("<Trancate offset:%d,Error:%+v>", self.seek, err)
 		}
 		err = self.Seek(offset)
 		if err != nil {
-			logger.Error("<seek offset[%d] error:%+v>", self.offset, err)
+			logger.Error("<seek offset[%d] error:%+v>", self.seek, err)
 		}
 
 		for {
