@@ -66,10 +66,8 @@ func (self *File) ReadOneByte(offset int64) ([]byte, error) {
 func (self *File) TrancateOffsetByLF(offset int64) (int64, error) {
 	logger.Debug("%+v", offset)
 	for ; offset >= 0; offset-- {
-		logger.Debug("%+v", offset)
 		buf, err := self.ReadOneByte(offset)
 		if err != nil {
-			logger.Debug("!!!%+v", err)
 			return 0, err
 		}
 		if string(buf) == "\n" {
