@@ -24,6 +24,10 @@ func NewFile(name string, model int) *File {
 	return file
 }
 
+func (self *File) Name() string {
+    return self.name
+}
+
 func (self *File) Open() (err error) {
 	self.fd, err = os.OpenFile(self.name, self.model, 0660)
 	if err != nil {
