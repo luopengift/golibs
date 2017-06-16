@@ -15,6 +15,7 @@ type Tail struct {
 	line     chan *string
 	reader   *bufio.Reader
 	interval int64
+	offset   int64
 
 	//EOF
 	//@ true: stop
@@ -31,6 +32,7 @@ func NewTail(cname string) *Tail {
 		make(chan *string),
 		bufio.NewReader(file.fd),
 		1000, //ms
+		0,
 		false,
 	}
 }
@@ -59,17 +61,32 @@ func (self *Tail) Stop() {
 
 func (self *Tail) ReadLine() {
 	go func() {
+
+		offset, err := self.TrancateOffsetByLF(self.offset)
+		if err != nil {
+			logger.Error("<Trancate offset:%d,Error:%+v>", self.offset, err)
+			self.Stop()
+			return
+		}
+		err = self.Seek(offset)
+		if err != nil {
+			logger.Error("<seek offset[%d] error:%+v>", self.offset, err)
+			self.Stop()
+			return
+		}
+
 		for {
 			line, err := self.reader.ReadString('\n')
 			switch {
 			case err == io.EOF:
 				if self.endstop {
+					logger.Warn("<file %s is END:%+v>", self.name, err)
 					self.Stop()
 					return
 				}
 				time.Sleep(time.Duration(self.interval) * time.Millisecond)
 				if self.name == self.cname {
-					if inode, err := Inode(self.name); err != nil { //检测是否需要重新打开新的文件
+					if inode, err := self.Inode(); err != nil { //检测是否需要重新打开新的文件
 						continue
 					} else {
 						if inode != self.inode {
@@ -92,6 +109,7 @@ func (self *Tail) ReadLine() {
 			default:
 				msg := strings.TrimRight(line, "\n")
 				self.line <- &msg
+				self.seek += int64(len(line))
 			}
 		}
 	}()
@@ -99,9 +117,4 @@ func (self *Tail) ReadLine() {
 
 func (self *Tail) NextLine() chan *string {
 	return self.line
-}
-
-func (self *Tail) Offset() int64 {
-	offset, _ := self.fd.Seek(0, os.SEEK_CUR)
-	return offset
 }
