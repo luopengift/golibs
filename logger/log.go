@@ -33,12 +33,12 @@ var (
 
 type Logger struct {
 	lv     uint8
-	prefix bool
+	prefix string
 	color  bool
 	out    []io.Writer
 }
 
-func NewLogger(lv uint8, prefix bool, color bool, out ...io.Writer) *Logger {
+func NewLogger(lv uint8, prefix string, color bool, out ...io.Writer) *Logger {
 	return &Logger{
 		lv:     lv,
 		prefix: prefix,
@@ -51,7 +51,7 @@ func (self *Logger) SetLevel(lv uint8) {
 	self.lv = lv
 }
 
-func (self *Logger) SetPrefix(prefix bool) {
+func (self *Logger) SetPrefix(prefix string) {
 	self.prefix = prefix
 }
 
@@ -65,8 +65,8 @@ func (self *Logger) SetOutput(out ...io.Writer) {
 
 func (self *Logger) format(lv uint8, format string) string {
 	str := ""
-	if self.prefix {
-		str += fmt.Sprintf("%s %s ", time.Now().Format("2006-01-02 15:04:05.000"), Level[lv])
+	if self.prefix != "" {
+		str += fmt.Sprintf("%s %s ", time.Now().Format(self.prefix), Level[lv])
 	}
 	str += format
 	if self.color {
@@ -96,7 +96,7 @@ func SetLevel(lv uint8) {
 	MyLogger.lv = lv
 }
 
-func SetPrefix(prefix bool) {
+func SetPrefix(prefix string) {
 	MyLogger.prefix = prefix
 }
 
@@ -132,6 +132,6 @@ func Panic(format string, msg ...interface{}) {
 }
 
 func init() {
-	MyLogger = NewLogger(DEBUG, true, true, os.Stdout)
+	MyLogger = NewLogger(DEBUG, "2006-01-02 15:04:05.000", true, os.Stdout)
 
 }
