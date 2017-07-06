@@ -35,7 +35,7 @@ func (self *Config) cleanLine(line string) string {
 
 // 去除json文件中的注释
 func (self *Config) Clean() string {
-	f := NewTail(self.file)
+	f := NewTail(self.file,NullRule)
 	f.EndStop(true)
 	f.ReadLine()
 	for v := range f.NextLine() {

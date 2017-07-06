@@ -15,24 +15,26 @@ type Tail struct {
 	line     chan *string
 	reader   *bufio.Reader
 	interval int64
-
+    Handler // file name handle interface
 	//EOF
 	//@ true: stop
 	//@ false: wait
 	endstop bool
 }
 
-func NewTail(cname string) *Tail {
-	name := HandlerRule(cname)
+func NewTail(cname string, handler Handler) *Tail {
+	name := handler.Handle(cname)
 	file := NewFile(name, os.O_RDONLY)
-	return &Tail{
-		file,
-		cname,
-		make(chan *string),
-		bufio.NewReader(file.fd),
-		1000, //ms
-		false,
-	}
+
+    tail := new(Tail)
+    tail.File = NewFile(name, os.O_RDONLY)
+    tail.cname = cname
+    tail.line = make(chan *string)
+    tail.reader = bufio.NewReader(file.fd)
+    tail.interval = 1000 //ms
+    tail.endstop = false
+    tail.Handler = handler
+    return tail
 }
 
 func (self *Tail) EndStop(b bool) {
@@ -43,7 +45,7 @@ func (self *Tail) ReOpen() error {
 	if err := self.Close(); err != nil {
 		logger.Error("<file %v close fail:%v>", self.name, err)
 	}
-	self.name = HandlerRule(self.cname)
+	self.name = self.Handler.Handle(self.cname)
 	err := self.Open()
 	if err != nil {
 		return err
@@ -88,7 +90,7 @@ func (self *Tail) ReadLine() {
 						}
 					}
 				} else {
-					if self.name == HandlerRule(self.cname) { //检测是否需要按时间轮转新文件
+					if self.name == self.Handler.Handle(self.cname) { //检测是否需要按时间轮转新文件
 						continue
 					} else {
 						self.ReOpen()
