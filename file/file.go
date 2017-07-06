@@ -54,6 +54,14 @@ func (self *File) Open() (err error) {
 	return
 }
 
+func (self *File) Read(p []byte) (int, error) {
+	return self.fd.Read(p)
+}
+
+func (self *File) Write(p []byte) (int, error) {
+	return self.fd.Write(p)
+}
+
 func (self *File) Close() error {
 	return self.fd.Close()
 }
