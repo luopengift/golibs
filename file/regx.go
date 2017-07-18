@@ -1,8 +1,8 @@
 package file
 
 import (
-	"regexp"
 	"time"
+	"strings"
 )
 
 var TimeRule *TimeRuler
@@ -30,14 +30,10 @@ type TimeRuler struct{}
 //eg:"test-%Y%M%D.log" ->"test-20170203.log"
 //eg:"test-%Y-%M-%D.log" ->"test-2017-02-03.log"
 func (t *TimeRuler) Handle(str string) string {
-	for k, v := range Map {
-		re, err := regexp.Compile(k)
-		if err != nil {
-			continue
-		}
-		str = re.ReplaceAllString(str, v)
-	}
-	return time.Now().Format(str)
+    for k, v := range Map {
+        str = strings.Replace(str,k,time.Now().Format(v),-1)
+    }
+    return str
 }
 
 type NullRuler struct{}
