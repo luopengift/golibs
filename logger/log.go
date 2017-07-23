@@ -90,6 +90,31 @@ func (self *Logger) output(format string, msg ...interface{}) {
 	}
 }
 
+func (self *Logger) Trace(format string, msg ...interface{}) {
+	self.writeLog(TRACE, format, msg...)
+}
+
+func (self *Logger) Debug(format string, msg ...interface{}) {
+	self.writeLog(DEBUG, format, msg...)
+}
+func (self *Logger) Info(format string, msg ...interface{}) {
+	self.writeLog(INFO, format, msg...)
+}
+func (self *Logger) Warn(format string, msg ...interface{}) {
+	self.writeLog(WARNING, format, msg...)
+}
+func (self *Logger) Error(format string, msg ...interface{}) {
+	self.writeLog(ERROR, format, msg...)
+}
+func (self *Logger) Fatal(format string, msg ...interface{}) {
+        self.writeLog(FATAL, format, msg...)
+}
+func (self *Logger) Panic(format string, msg ...interface{}) {
+        self.writeLog(PANIC, format, msg...)
+        panic(fmt.Sprintf(format, msg...))
+}
+
+
 var MyLogger *Logger
 
 func SetLevel(lv uint8) {
