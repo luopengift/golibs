@@ -88,7 +88,7 @@ func (self *Tail) ReadLine() {
 				}
 				time.Sleep(time.Duration(self.interval) * time.Millisecond)
 				if self.name == self.cname {
-					if inode, err := self.Inode(); err != nil { //检测是否需要重新打开新的文件
+					if inode, err := Inode(self.name); err != nil { //检测是否需要重新打开新的文件
 						continue
 					} else {
 						if inode != self.inode {

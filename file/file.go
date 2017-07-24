@@ -138,3 +138,12 @@ func (self *File) Inode() (uint64, error) {
 		return inode, nil
 	}
 }
+
+func Inode(name string) (uint64, error) {
+	if stat, err := os.Stat(name); err != nil {
+		return 0, err
+	} else {
+		inode := stat.Sys().(*syscall.Stat_t).Ino
+		return inode, nil
+	}
+}
