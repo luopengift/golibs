@@ -85,8 +85,7 @@ func (self *Logger) writeLog(lv uint8, format string, msg ...interface{}) error 
 
 func (self *Logger) output(format string, msg ...interface{}) {
 	for _, out := range self.out {
-		fmt.Fprintf(out, format, msg...)
-		fmt.Fprint(out, "\n")
+		fmt.Fprintf(out, format+"\n", msg...)
 	}
 }
 
@@ -107,10 +106,9 @@ func (self *Logger) Error(format string, msg ...interface{}) {
 	self.writeLog(ERROR, format, msg...)
 }
 func (self *Logger) Fatal(format string, msg ...interface{}) {
-        self.writeLog(FATAL, format, msg...)
+	self.writeLog(FATAL, format, msg...)
 }
 func (self *Logger) Panic(format string, msg ...interface{}) {
-        self.writeLog(PANIC, format, msg...)
-        panic(fmt.Sprintf(format, msg...))
+	self.writeLog(PANIC, format, msg...)
+	panic(fmt.Sprintf(format, msg...))
 }
-
