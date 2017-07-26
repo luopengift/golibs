@@ -122,7 +122,10 @@ func (self *Tail) NextLine() chan *string {
 }
 
 func (self *Tail) Read(p []byte) (int, error) {
-	msg := <-self.line
+	msg,ok := <-self.line
+	if !ok {
+		return 0,fmt.Errorf("file is closed")
+	}
 	if len(*msg) > len(p) {
 		return 0, errors.New("message is large than buf")
 	}
