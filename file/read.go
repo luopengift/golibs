@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"fmt"
 )
 
 type Tail struct {
