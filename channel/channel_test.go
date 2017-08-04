@@ -1,27 +1,48 @@
 package channel
 
 import (
-	"fmt"
+	//	"fmt"
 	"testing"
-	"time"
+	//	"time"
 )
 
+/*
 func Test_channel(t *testing.T) {
-	q := NewChannel(10)
+	ch := NewChannel(10)
 	//启动协程查看信息
 	go func() {
 		for {
-			fmt.Println(q)
+			fmt.Println(ch)
 			time.Sleep(500 * time.Millisecond)
 		}
 	}()
-	for i := 0; i < 20; i++ {
-		q.Run(func() error {
-			fmt.Println(fmt.Sprintf("groutine no.%d start,time %v", i, time.Now().Format("15:04:05")))
-			time.Sleep(2 * time.Second)
-			fmt.Println(fmt.Sprintf("groutine no.%d end,time %v", i, time.Now().Format("15:04:05")))
-			return nil
-		})
+	go func() {
+		for {
+			fmt.Println(ch.Get())
+			time.Sleep(200 * time.Millisecond)
+
+		}
+	}()
+	for i:= 0;i<10;i++ {
+		ch.Put(i)
 	}
-	select {}
+	time.Sleep(10 *time.Second)
+	fmt.Println("err:",ch.Close())
+}
+*/
+
+func Benchmark_Channel(b *testing.B) {
+	ch := NewChannel(1000)
+	/*go func() {
+		for {
+			if _,ok := ch.Get(); !ok {
+				return
+			}
+		}
+	}()*/
+	for i := 0; i < b.N; i++ {
+		ch.Put("11111111111111111111111111111asdfasdfadfl;kj11111111111111111111111")
+		ch.Get()
+	}
+	ch.Close()
 }
