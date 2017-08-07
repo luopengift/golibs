@@ -13,7 +13,7 @@ type Producer struct {
 	channel *channel.Channel //并发写topic的协程控制
 }
 
-func NewProducer(addrs []string, topic string, maxThreads int64) *Producer {
+func NewProducer(addrs []string, topic string, maxThreads int) *Producer {
 	return &Producer{
 		addrs:   addrs,
 		topic:   topic,

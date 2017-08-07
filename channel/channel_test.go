@@ -1,12 +1,11 @@
 package channel
 
 import (
-	//	"fmt"
+	"fmt"
 	"testing"
-	//	"time"
+	"time"
 )
 
-/*
 func Test_channel(t *testing.T) {
 	ch := NewChannel(10)
 	//启动协程查看信息
@@ -23,13 +22,12 @@ func Test_channel(t *testing.T) {
 
 		}
 	}()
-	for i:= 0;i<10;i++ {
+	for i := 0; i < 10; i++ {
 		ch.Put(i)
 	}
-	time.Sleep(10 *time.Second)
-	fmt.Println("err:",ch.Close())
+	time.Sleep(10 * time.Second)
+	fmt.Println("err:", ch.Close())
 }
-*/
 
 func Benchmark_Channel(b *testing.B) {
 	ch := NewChannel(1000)

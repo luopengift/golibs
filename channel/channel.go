@@ -12,7 +12,7 @@ type Channel struct {
 	cnt     int64            //通过队列数量计数
 }
 
-func NewChannel(max uint) *Channel {
+func NewChannel(max int) *Channel {
 	channel := &Channel{
 		mux:     new(sync.Mutex),
 		channel: make(chan interface{}, max),
@@ -49,9 +49,9 @@ func (ch *Channel) Put(v interface{}) error {
 }
 
 //从管道中读数据
-func (ch *Channel) Get() (interface{},bool) {
+func (ch *Channel) Get() (interface{}, bool) {
 	v, ok := <-ch.channel
-	return v,ok
+	return v, ok
 }
 
 //往管道中放入一个标记，记录活跃数值
@@ -65,9 +65,9 @@ func (ch *Channel) Done() {
 }
 
 func (ch *Channel) Total() int64 { return ch.cnt }
-func (ch *Channel) Cap() int { return cap(ch.channel) }
-func (ch *Channel) Len() int { return len(ch.channel) }
-func (ch *Channel) Idle() int { return ch.Cap() - ch.Len() }
+func (ch *Channel) Cap() int     { return cap(ch.channel) }
+func (ch *Channel) Len() int     { return len(ch.channel) }
+func (ch *Channel) Idle() int    { return ch.Cap() - ch.Len() }
 
 func (ch *Channel) String() string {
 	return fmt.Sprintf("<Max:%d,Total:%d,Idle:%d,Len:%d>", ch.Cap(), ch.Total(), ch.Idle(), ch.Len())

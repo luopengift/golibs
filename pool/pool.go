@@ -4,6 +4,7 @@ import (
 	"os"
 	"fmt"
 	"github.com/luopengift/golibs/logger"
+	"github.com/luopengift/golibs/channel"
 	"sync"
 	"time"
 )
@@ -17,7 +18,7 @@ type Pool struct {
 	timeout time.Duration //链接最大存活时间
 	factory Factory       //连接生成方式
 	pool    chan *Ctx     //连接存放的channel
-	channel *Channel      //并发最大连接控制
+	channel *channel.Channel      //并发最大连接控制
 	log *logger.Logger
 }
 
@@ -33,7 +34,7 @@ func NewPool(maxIdle, maxOpen, timeout int, factory Factory) *Pool {
 	p.timeout = time.Duration(timeout) * time.Second
 	p.factory = factory
 	p.pool = make(chan *Ctx, p.maxOpen)
-	p.channel = NewChannel(p.maxOpen)
+	p.channel = channel.NewChannel(p.maxOpen)
 	p.log = logger.NewLogger(logger.INFO, "2006/01/02 15:04:05.000 [Conn Pool]", true, os.Stdout)
 	for i := 0; i < p.maxIdle; i++ {
 		if err := p.create(); err != nil {
@@ -52,7 +53,7 @@ func (p *Pool) create() error {
 	if p.channel.Len() >= p.maxOpen {
 		return fmt.Errorf("conn pool is full,can not create new conn!")
 	}
-	p.channel.Add(1)
+	p.channel.Add()
 	conn, err := p.factory()
 	if err != nil {
 		return fmt.Errorf("create a new conn error!%v", err)
