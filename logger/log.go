@@ -38,11 +38,11 @@ type Logger struct {
 	out    []io.Writer
 }
 
-func NewLogger(lv uint8, prefix string, color bool, out ...io.Writer) *Logger {
+func NewLogger(lv uint8, out ...io.Writer) *Logger {
 	return &Logger{
 		lv:     lv,
-		prefix: prefix,
-		color:  color,
+		prefix: "2006-01-02 15:04:05.000",
+		color:  true,
 		out:    out,
 	}
 }
