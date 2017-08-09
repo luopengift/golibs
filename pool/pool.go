@@ -35,7 +35,8 @@ func NewPool(maxIdle, maxOpen, timeout int, factory Factory) *Pool {
 	p.factory = factory
 	p.pool = make(chan *Ctx, p.maxOpen)
 	p.channel = channel.NewChannel(p.maxOpen)
-	p.log = logger.NewLogger(logger.INFO, "2006/01/02 15:04:05.000 [Conn Pool]", true, os.Stdout)
+	p.log = logger.NewLogger(logger.INFO, os.Stdout)
+	p.log.SetPrefix("<conn pool>")
 	for i := 0; i < p.maxIdle; i++ {
 		if err := p.create(); err != nil {
 			p.log.Error("%v", err)
