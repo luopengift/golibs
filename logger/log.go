@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -32,83 +33,98 @@ var (
 )
 
 type Logger struct {
-	lv     uint8
-	prefix string
-	color  bool
-	out    []io.Writer
+	lv         uint8  //最低日志级别
+	timeFormat string //时间格式
+	prefix     string
+	color      bool
+	out        []io.Writer
 }
 
 func NewLogger(lv uint8, out ...io.Writer) *Logger {
 	return &Logger{
-		lv:     lv,
-		prefix: "2006-01-02 15:04:05.000",
-		color:  true,
-		out:    out,
+		lv:         lv,
+		timeFormat: "2006-01-02 15:04:05.000",
+		prefix:     "",
+		color:      true,
+		out:        out,
 	}
 }
 
-func (self *Logger) SetLevel(lv uint8) {
-	self.lv = lv
+func (log *Logger) SetLevel(lv uint8) {
+	log.lv = lv
 }
 
-func (self *Logger) SetPrefix(prefix string) {
-	self.prefix = prefix
+func (log *Logger) SetTimeFormat(timeFormat string) {
+	log.timeFormat = timeFormat
 }
 
-func (self *Logger) SetColor(color bool) {
-	self.color = color
+func (log *Logger) SetPrefix(prefix string) {
+	log.prefix = prefix
 }
 
-func (self *Logger) SetOutput(out ...io.Writer) {
-	self.out = out
+func (log *Logger) SetColor(color bool) {
+	log.color = color
 }
 
-func (self *Logger) format(lv uint8, format string) string {
-	str := ""
-	if self.prefix != "" {
-		str += fmt.Sprintf("%s %s ", time.Now().Format(self.prefix), Level[lv])
+func (log *Logger) SetOutput(out ...io.Writer) {
+	log.out = out
+}
+
+func (log *Logger) format(lv uint8, format string) string {
+	var buf bytes.Buffer
+	if log.timeFormat != "" {
+		buf.WriteString(time.Now().Format(log.timeFormat))
+		buf.WriteString(" ")
 	}
-	str += format
-	if self.color {
+	buf.WriteString(Level[lv])
+	buf.WriteString(" ")
+	if log.prefix != "" {
+		buf.WriteString(log.prefix)
+		buf.WriteString(" ")
+	}
+	buf.WriteString(format)
+	buf.WriteString(" ")
+	str := buf.String()
+	if log.color {
 		str = setColor(lv, str)
 	}
 	return str
 }
 
-func (self *Logger) writeLog(lv uint8, format string, msg ...interface{}) error {
-	if lv < self.lv {
+func (log *Logger) writeLog(lv uint8, format string, msg ...interface{}) error {
+	if lv < log.lv {
 		return nil
 	}
-	self.output(self.format(lv, format), msg...)
+	log.output(log.format(lv, format), msg...)
 	return nil
 }
 
-func (self *Logger) output(format string, msg ...interface{}) {
-	for _, out := range self.out {
+func (log *Logger) output(format string, msg ...interface{}) {
+	for _, out := range log.out {
 		fmt.Fprintf(out, format+"\n", msg...)
 	}
 }
 
-func (self *Logger) Trace(format string, msg ...interface{}) {
-	self.writeLog(TRACE, format, msg...)
+func (log *Logger) Trace(format string, msg ...interface{}) {
+	log.writeLog(TRACE, format, msg...)
 }
 
-func (self *Logger) Debug(format string, msg ...interface{}) {
-	self.writeLog(DEBUG, format, msg...)
+func (log *Logger) Debug(format string, msg ...interface{}) {
+	log.writeLog(DEBUG, format, msg...)
 }
-func (self *Logger) Info(format string, msg ...interface{}) {
-	self.writeLog(INFO, format, msg...)
+func (log *Logger) Info(format string, msg ...interface{}) {
+	log.writeLog(INFO, format, msg...)
 }
-func (self *Logger) Warn(format string, msg ...interface{}) {
-	self.writeLog(WARNING, format, msg...)
+func (log *Logger) Warn(format string, msg ...interface{}) {
+	log.writeLog(WARNING, format, msg...)
 }
-func (self *Logger) Error(format string, msg ...interface{}) {
-	self.writeLog(ERROR, format, msg...)
+func (log *Logger) Error(format string, msg ...interface{}) {
+	log.writeLog(ERROR, format, msg...)
 }
-func (self *Logger) Fatal(format string, msg ...interface{}) {
-	self.writeLog(FATAL, format, msg...)
+func (log *Logger) Fatal(format string, msg ...interface{}) {
+	log.writeLog(FATAL, format, msg...)
 }
-func (self *Logger) Panic(format string, msg ...interface{}) {
-	self.writeLog(PANIC, format, msg...)
+func (log *Logger) Panic(format string, msg ...interface{}) {
+	log.writeLog(PANIC, format, msg...)
 	panic(fmt.Sprintf(format, msg...))
 }

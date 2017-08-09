@@ -11,6 +11,10 @@ func SetLevel(lv uint8) {
 	MyLogger.lv = lv
 }
 
+func SetTimeFormat(timeFormat string) {
+	MyLogger.timeFormat = timeFormat
+}
+
 func SetPrefix(prefix string) {
 	MyLogger.prefix = prefix
 }
