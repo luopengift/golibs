@@ -2,13 +2,13 @@ package file
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
+	"fmt"
 	"github.com/luopengift/golibs/logger"
 	"io"
 	"os"
 	"time"
-	"fmt"
-    "bytes"
 )
 
 type Tail struct {
@@ -31,7 +31,7 @@ func NewTail(cname string, handler Handler) *Tail {
 	tail := new(Tail)
 	tail.File = NewFile(name, os.O_RDONLY)
 	tail.cname = cname
-	tail.line = make(chan []byte)
+	tail.line = make(chan []byte, 1)
 	tail.reader = bufio.NewReader(file.fd)
 	tail.interval = 1000 //ms
 	tail.endstop = false
@@ -123,9 +123,9 @@ func (self *Tail) NextLine() chan []byte {
 }
 
 func (self *Tail) Read(p []byte) (int, error) {
-	msg,ok := <-self.line
+	msg, ok := <-self.line
 	if !ok {
-		return 0,fmt.Errorf("file is closed")
+		return 0, fmt.Errorf("file is closed")
 	}
 	if len(msg) > len(p) {
 		return 0, errors.New("message is large than buf")
