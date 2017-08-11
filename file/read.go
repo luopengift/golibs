@@ -130,6 +130,6 @@ func (self *Tail) Read(p []byte) (int, error) {
 	if len(msg) > len(p) {
 		return 0, errors.New("message is large than buf")
 	}
-	copy(p, msg)
-	return len(msg), nil
+	n := copy(p, msg)
+	return n, nil
 }
