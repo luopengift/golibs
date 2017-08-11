@@ -39,8 +39,8 @@ func (self *Config) Clean() string {
 	f.EndStop(true)
 	f.ReadLine()
 	for v := range f.NextLine() {
-		if !strings.HasPrefix(*v, self.comment) {
-			self.contents = append(self.contents, self.cleanLine(*v))
+		if !strings.HasPrefix(string(v), self.comment) {
+			self.contents = append(self.contents, self.cleanLine(string(v)))
 		}
 	}
 	return self.String()

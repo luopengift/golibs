@@ -6,15 +6,15 @@ import (
 	"github.com/luopengift/golibs/logger"
 	"io"
 	"os"
-	"strings"
 	"time"
 	"fmt"
+    "bytes"
 )
 
 type Tail struct {
 	*File
 	cname    string //config name
-	line     chan *string
+	line     chan []byte
 	reader   *bufio.Reader
 	interval int64
 	Handler  // file name handle interface
@@ -31,7 +31,7 @@ func NewTail(cname string, handler Handler) *Tail {
 	tail := new(Tail)
 	tail.File = NewFile(name, os.O_RDONLY)
 	tail.cname = cname
-	tail.line = make(chan *string)
+	tail.line = make(chan []byte)
 	tail.reader = bufio.NewReader(file.fd)
 	tail.interval = 1000 //ms
 	tail.endstop = false
@@ -79,11 +79,11 @@ func (self *Tail) ReadLine() {
 		}
 
 		for {
-			line, err := self.reader.ReadString('\n')
+			line, err := self.reader.ReadBytes('\n')
 			switch {
 			case err == io.EOF:
 				if self.endstop {
-					logger.Warn("<file %s is END:%+v>", self.name, err)
+					logger.Info("<file %s is END:%+v>", self.name, err)
 					self.Stop()
 					return
 				}
@@ -110,15 +110,15 @@ func (self *Tail) ReadLine() {
 				self.ReOpen()
 				continue
 			default:
-				msg := strings.TrimRight(line, "\n")
-				self.line <- &msg
+				msg := bytes.TrimRight(line, "\n")
+				self.line <- msg
 				self.seek += int64(len(line))
 			}
 		}
 	}()
 }
 
-func (self *Tail) NextLine() chan *string {
+func (self *Tail) NextLine() chan []byte {
 	return self.line
 }
 
@@ -127,9 +127,9 @@ func (self *Tail) Read(p []byte) (int, error) {
 	if !ok {
 		return 0,fmt.Errorf("file is closed")
 	}
-	if len(*msg) > len(p) {
+	if len(msg) > len(p) {
 		return 0, errors.New("message is large than buf")
 	}
-	copy(p, []byte(*msg))
-	return len(*msg), nil
+	copy(p, msg)
+	return len(msg), nil
 }

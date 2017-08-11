@@ -11,7 +11,7 @@ func Test_read(t *testing.T) {
 	tt.ReadLine()
 	tt.EndStop(true)
 	for v := range tt.NextLine() {
-		fmt.Println(*v)
+		fmt.Println(string(v))
 	}
 }
 
