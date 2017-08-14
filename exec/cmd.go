@@ -1,8 +1,6 @@
 package exec
 
 import (
-    "github.com/luopengift/golibs/logger"
-    "errors"
     "bytes"
     "fmt"
     "os/exec"
@@ -10,39 +8,23 @@ import (
     "time"
 )
 
-func Cmd(name string,arg ...string) *exec.Cmd {
+func Cmd(name string, arg ...string) *exec.Cmd {
     return exec.Command(name, arg...)
 }
 
-func CmdOut(name string, arg ...string) (string, error) {
+func CmdOut(name string, arg ...string) ([]byte, error) {
     cmd := exec.Command(name, arg...)
-    ret,err := cmd.CombinedOutput()
-    return string(ret), err
-}
-
-
-func CmdOutBytes(name string, arg ...string) ([]byte, error) {
-    cmd := exec.Command(name, arg...)
-    var out bytes.Buffer
-    cmd.Stdout = &out
-    err := cmd.Run()
-    return out.Bytes(), err
-}
-
-func CmdOutNoLn(name string, arg ...string) (out string, err error) {
-    out, err = CmdOut(name, arg...)
+    out, err := cmd.CombinedOutput()
     if err != nil {
-        return
+        return nil, fmt.Errorf(err.Error() + ":" + string(out))
     }
-
-    return strings.TrimSpace(string(out)), nil
+    return out, nil
 }
 
-
-func CmdRunWithTimeout(command string, timeout int64) ([]byte, error) {
-    cmd := Cmd("/bin/bash","-c",command)
+func CmdOutWithTimeout(command string, timeout int) ([]byte, error) {
+    cmd := exec.Command("/bin/bash", "-c", command)
     done := make(chan error)
-    var stdout,stderr bytes.Buffer
+    var stdout, stderr bytes.Buffer
     cmd.Stdout, cmd.Stderr = &stdout, &stderr
 
     cmd.Start()
@@ -52,23 +34,14 @@ func CmdRunWithTimeout(command string, timeout int64) ([]byte, error) {
 
     select {
     case <-time.After(time.Duration(timeout) * time.Second):
-
-        go func() {
-            result := <-done // allow goroutine to exit
-            logger.Info("%v",result)
-        }()
-
-        err := cmd.Process.Kill()   // timeout
+        err := cmd.Process.Kill() // timeout
         if err != nil {
-            logger.Error("failed to kill: %s, error: %s", cmd.Path, err)
-            return stderr.Bytes(),err
+            return stdout.Bytes(), fmt.Errorf(stderr.String() + err.Error())
         }
-        return stderr.Bytes(),
-            errors.New(fmt.Sprintf("exit status 62:TIMEOUT %d,Process %s has been killed",timeout,strings.Join(cmd.Args, " ")))
+        return stdout.Bytes(), fmt.Errorf(stderr.String() + `TIMEOUT %d,Process "%s" has been killed`, timeout, strings.Join(cmd.Args, " "))
     case err := <-done:
-        //fmt.Println(string(stdout.Bytes()),string(stderr.Bytes()),err)
         if err != nil {
-            return stderr.Bytes(), err
+            return nil, fmt.Errorf(err.Error() + ":" + stderr.String())
         }
         return stdout.Bytes(), err
     }
