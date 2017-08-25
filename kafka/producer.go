@@ -54,8 +54,8 @@ func (self *Producer) WriteToTopic() error {
 			go func(message []byte) {
 				msg := &sarama.ProducerMessage{
 					Topic:     self.topic,
-					Partition: int32(-1),
-					Key:       sarama.StringEncoder("key"),
+					//Partition: int32(-1),
+					//Key:       sarama.StringEncoder("key"),
 					Value:     sarama.ByteEncoder(message),
 				}
 				if partition, offset, err := producer.SendMessage(msg); err != nil {
