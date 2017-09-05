@@ -15,6 +15,7 @@ func Cmd(name string, arg ...string) *exec.Cmd {
 func CmdOut(name string, arg ...string) ([]byte, error) {
     cmd := exec.Command(name, arg...)
     out, err := cmd.CombinedOutput()
+    out = bytes.TrimSpace(out)
     if err != nil {
         return nil, fmt.Errorf(err.Error() + ":" + string(out))
     }
