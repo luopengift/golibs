@@ -49,3 +49,13 @@ func Test_config(t *testing.T) {
 	fmt.Println(config)
 
 }
+
+
+func Test_tail(t *testing.T) {
+    f := NewTail("/tmp/test/t_%Y%M%D%h%m.log",&TimeRuler{})
+    f.ReadLine()
+    f.EndStop(false)
+    for v := range f.NextLine() {
+        fmt.Println(string(v))
+    }
+}
