@@ -1,10 +1,10 @@
 package pool
 
 import (
-	"os"
 	"fmt"
-	"github.com/luopengift/golibs/logger"
 	"github.com/luopengift/golibs/channel"
+	"github.com/luopengift/golibs/logger"
+	"os"
 	"sync"
 	"time"
 )
@@ -13,13 +13,13 @@ type Factory func() (interface{}, error)
 
 type Pool struct {
 	mutex   *sync.Mutex
-	maxIdle int           //最大空闲数
-	maxOpen int           //最大连接数
-	timeout time.Duration //链接最大存活时间
-	factory Factory       //连接生成方式
-	pool    chan *Ctx     //连接存放的channel
-	channel *channel.Channel      //并发最大连接控制
-	log *logger.Logger
+	maxIdle int              //最大空闲数
+	maxOpen int              //最大连接数
+	timeout time.Duration    //链接最大存活时间
+	factory Factory          //连接生成方式
+	pool    chan *Ctx        //连接存放的channel
+	channel *channel.Channel //并发最大连接控制
+	log     *logger.Logger
 }
 
 func NewPool(maxIdle, maxOpen, timeout int, factory Factory) *Pool {
@@ -35,7 +35,7 @@ func NewPool(maxIdle, maxOpen, timeout int, factory Factory) *Pool {
 	p.factory = factory
 	p.pool = make(chan *Ctx, p.maxOpen)
 	p.channel = channel.NewChannel(p.maxOpen)
-	p.log = logger.NewLogger(logger.INFO, os.Stdout)
+	p.log = logger.NewLogger("2006/01/02 15:04:05.000", logger.INFO, os.Stdout)
 	p.log.SetPrefix("<conn pool>")
 	for i := 0; i < p.maxIdle; i++ {
 		if err := p.create(); err != nil {
@@ -71,7 +71,7 @@ func (p *Pool) Get() (interface{}, error) {
 		select {
 		case ctx := <-p.pool:
 			if ctx.time.Add(p.timeout).Before(time.Now()) {
-				p.log.Debug("Get one is timeout,release:%p",ctx.conn)
+				p.log.Debug("Get one is timeout,release:%p", ctx.conn)
 				p.release(ctx)
 				continue
 			}
@@ -83,7 +83,7 @@ func (p *Pool) Get() (interface{}, error) {
 				p.log.Debug("pool is null,create one")
 				p.create()
 				continue
-			}else{
+			} else {
 				p.log.Debug("all conn is used,please wait...")
 				ctx := <-p.pool
 				if ctx.time.Add(p.timeout).Before(time.Now()) {
@@ -104,11 +104,11 @@ func (p *Pool) Put(conn interface{}) error {
 	}
 	select {
 	case p.pool <- NewCtx(conn):
-		p.log.Debug("PUT conn into pool:%p",conn)
+		p.log.Debug("PUT conn into pool:%p", conn)
 		return nil
 	default:
 		//连接池已满，直接关闭该链接
-		p.log.Warn("pool if full,release:%p",conn)
+		p.log.Warn("pool if full,release:%p", conn)
 		return p.release(conn)
 	}
 	return nil
