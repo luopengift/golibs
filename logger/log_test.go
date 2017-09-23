@@ -5,7 +5,7 @@ import (
 )
 
 func Test_logger(t *testing.T) {
-	MyLogger.SetLevel(TRACE)
+	MyLogger.SetLevel(NULL)
 	MyLogger.SetPrefix("Module")
 	Trace("1234567")
 	Debug("<%s,%s>", "hello", "xxx")
