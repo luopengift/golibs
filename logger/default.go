@@ -50,6 +50,6 @@ func Panic(format string, msg ...interface{}) {
 }
 
 func init() {
-	MyLogger = NewLogger(DEBUG, os.Stdout)
+	MyLogger = NewLogger("2006/01/02 15:04:05.000", DEBUG, os.Stdout)
 
 }

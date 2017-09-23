@@ -41,10 +41,10 @@ type Logger struct {
 	out        []io.Writer
 }
 
-func NewLogger(lv uint8, out ...io.Writer) *Logger {
+func NewLogger(timeFormat string, lv uint8, out ...io.Writer) *Logger {
 	return &Logger{
 		lv:         lv,
-		timeFormat: "2006-01-02 15:04:05.000",
+		timeFormat: timeFormat,
 		prefix:     "",
 		color:      true,
 		out:        out,
