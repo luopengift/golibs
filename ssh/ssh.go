@@ -1,6 +1,8 @@
 package ssh
 
 import (
+	"fmt"
+	//	"github.com/luopengift/golibs/logger"
 	"github.com/luopengift/types"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
@@ -80,96 +82,111 @@ func (ep *Endpoint) Address() string {
 	return addr
 }
 
-func (ep *Endpoint) Session() (*ssh.Session, error) {
-	authMethods, err := ep.authMethods()
+func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
+	auths, err := ep.authMethods()
+
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("鉴权出错:", err)
 	}
+
 	config := &ssh.ClientConfig{
 		User: ep.User,
-		Auth: authMethods,
+		Auth: auths,
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		},
-		Timeout: 5 * time.Second,
 	}
 
-	// Connect to the remote server and perform the SSH handshake.
 	client, err := ssh.Dial("tcp", ep.Address(), config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("建立连接出错:", err)
 	}
 	defer client.Close()
 
 	session, err := client.NewSession()
 	if err != nil {
-		return nil, err
-	}
-	return session, nil
-}
-
-func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
-	session, err := ep.Session()
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("创建Session出错:", err)
 	}
 	defer session.Close()
 	return session.CombinedOutput(cmd)
 }
 
 func (ep *Endpoint) StartTerminal() error {
-	session, err := ep.Session()
+	auths, err := ep.authMethods()
+
 	if err != nil {
-		return err
+		return fmt.Errorf("鉴权出错:", err)
 	}
+
+	config := &ssh.ClientConfig{
+		User: ep.User,
+		Auth: auths,
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+		},
+	}
+
+	client, err := ssh.Dial("tcp", ep.Address(), config)
+	if err != nil {
+		return fmt.Errorf("建立连接出错:", err)
+	}
+	defer client.Close()
+
+	session, err := client.NewSession()
+	if err != nil {
+		return fmt.Errorf("创建Session出错:", err)
+	}
+
+	defer session.Close()
+
 	fd := int(os.Stdin.Fd())
 	oldState, err := terminal.MakeRaw(fd)
 	if err != nil {
-		return err
+		return fmt.Errorf("创建文件描述符出错:", err)
 	}
-	defer terminal.Restore(fd, oldState)
 
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
 	session.Stdin = os.Stdin
 
-	size := WindowSize{}
-
+	size := &WindowSize{}
 	go func() error {
-		t := time.NewTimer(time.Second * 0)
-		var err error
+		t := time.NewTimer(time.Millisecond * 0)
 		for {
 			select {
 			case <-t.C:
 				size.Width, size.Height, err = terminal.GetSize(fd)
 				if err != nil {
-					return err
+					return fmt.Errorf("获取窗口宽高出错:", err)
 				}
 				err = session.WindowChange(size.Height, size.Width)
 				if err != nil {
-					return err
+					return fmt.Errorf("改变窗口大小出错:", err)
 				}
-				t.Reset(time.Second * 1)
+				t.Reset(500 * time.Millisecond)
 			}
 		}
 	}()
+	defer terminal.Restore(fd, oldState)
 
 	modes := ssh.TerminalModes{
-		ssh.ECHO:          1, //显示输入的命令
+		ssh.ECHO:          1,
 		ssh.TTY_OP_ISPEED: 14400,
 		ssh.TTY_OP_OSPEED: 14400,
 	}
 
-	if err = session.RequestPty("xterm-256color", size.Height, size.Width, modes); err != nil {
-		return err
+	if err := session.RequestPty("xterm-256color", size.Height, size.Width, modes); err != nil {
+		return fmt.Errorf("创建终端出错:", err)
 	}
-	if err = session.Shell(); err != nil {
-		return err
+
+	err = session.Shell()
+	if err != nil {
+		return fmt.Errorf("执行Shell出错:", err)
 	}
-	if err = session.Wait(); err != nil {
-		return err
+
+	err = session.Wait()
+	if err != nil {
+		return fmt.Errorf("执行Wait出错:", err)
 	}
 	return nil
-
 }
-
