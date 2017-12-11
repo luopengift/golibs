@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"github.com/luopengift/types"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
@@ -25,7 +26,11 @@ type WindowSize struct {
 	Height int
 }
 
-func NewEndpoint(name, host, ip string, port int, user, password, key string) *Endpoint {
+func NewEndpoint() *Endpoint {
+	return &Endpoint{}
+}
+
+func NewEndpointWithValue(name, host, ip string, port int, user, password, key string) *Endpoint {
 	return &Endpoint{
 		Name:     name,
 		Host:     host,
@@ -35,6 +40,10 @@ func NewEndpoint(name, host, ip string, port int, user, password, key string) *E
 		Password: password,
 		Key:      key,
 	}
+}
+
+func (ep *Endpoint) Init(filename string) error {
+	return types.ParseConfigFile(filename, ep)
 }
 
 // 解析登录方式
@@ -162,15 +171,5 @@ func (ep *Endpoint) StartTerminal() error {
 	}
 	return nil
 
-}
-
-func Session(user, addr, password, key, cmd string) ([]byte, error) {
-	ep := NewEndpoint("", "", addr, 22, user, password, key)
-	session, err := ep.Session()
-	if err != nil {
-		return nil, err
-	}
-	defer session.Close()
-	return session.CombinedOutput(cmd)
 }
 
