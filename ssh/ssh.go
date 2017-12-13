@@ -99,6 +99,7 @@ func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		},
+		Timeout: 5 * time.Second,
 	}
 
 	client, err := ssh.Dial("tcp", ep.Address(), config)
@@ -128,6 +129,7 @@ func (ep *Endpoint) StartTerminal() error {
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		},
+		Timeout: 5 * time.Second,
 	}
 
 	client, err := ssh.Dial("tcp", ep.Address(), config)
