@@ -29,8 +29,7 @@ type WindowSize struct {
 }
 
 func NewEndpoint() *Endpoint {
-	ep := make(Endpoint)
-	return &ep
+	return new(Endpoint)
 }
 
 func NewEndpointWithValue(name, host, ip string, port int, user, password, key string) *Endpoint {
