@@ -17,7 +17,7 @@ const (
 	FATAL                      //32
 	PANIC                      //64
 	OFF                        //128
-    NULL    = uint8(0)
+	NULL    = uint8(0)
 )
 
 var (
@@ -77,10 +77,10 @@ func (log *Logger) format(lv uint8, format string) string {
 		buf.WriteString(time.Now().Format(log.timeFormat))
 		buf.WriteString(" ")
 	}
-    if log.lv != NULL {
-	    buf.WriteString(Level[lv])
-	    buf.WriteString(" ")
-    }
+	if log.lv != NULL {
+		buf.WriteString(Level[lv])
+		buf.WriteString(" ")
+	}
 	if log.prefix != "" {
 		buf.WriteString(log.prefix)
 		buf.WriteString(" ")

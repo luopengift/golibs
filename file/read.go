@@ -89,11 +89,11 @@ func (self *Tail) ReadLine() {
 				}
 				time.Sleep(time.Duration(self.interval) * time.Millisecond)
 				if self.name == self.cname {
-                    if self.IsSameFile(self.name) {
-                        continue
-                    }else{
-                        self.ReOpen()
-                    }
+					if self.IsSameFile(self.name) {
+						continue
+					} else {
+						self.ReOpen()
+					}
 				} else {
 					if self.name == self.Handler.Handle(self.cname) { //检测是否需要按时间轮转新文件
 						continue

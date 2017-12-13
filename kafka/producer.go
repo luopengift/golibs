@@ -53,10 +53,10 @@ func (self *Producer) WriteToTopic() error {
 			self.channel.Add()
 			go func(message []byte) {
 				msg := &sarama.ProducerMessage{
-					Topic:     self.topic,
+					Topic: self.topic,
 					//Partition: int32(-1),
 					//Key:       sarama.StringEncoder("key"),
-					Value:     sarama.ByteEncoder(message),
+					Value: sarama.ByteEncoder(message),
 				}
 				if partition, offset, err := producer.SendMessage(msg); err != nil {
 					logger.Error("<write to kafka error,partition=%v,offset=%v> %v", partition, offset, err)

@@ -18,9 +18,9 @@ func Test_pool(t *testing.T) {
 	logger.Info("pool init success...")
 	time.Sleep(1 * time.Second)
 	for i := 0; i < 4; i++ {
-	    wg.Add(1)
+		wg.Add(1)
 		go func() {
-            defer wg.Done()
+			defer wg.Done()
 			one, err := p.Get()
 			if err != nil {
 				logger.Error("pool get error:%v", err)
