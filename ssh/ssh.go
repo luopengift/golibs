@@ -53,6 +53,10 @@ func (ep *Endpoint) authMethods() ([]ssh.AuthMethod, error) {
 	authMethods := []ssh.AuthMethod{
 		ssh.Password(ep.Password),
 	}
+
+	if ep.Key == "" {
+		return authMethods, nil
+	}
 	keyBytes, err := ioutil.ReadFile(ep.Key)
 	if err != nil {
 		return authMethods, err
