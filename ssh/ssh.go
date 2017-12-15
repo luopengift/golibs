@@ -2,10 +2,13 @@ package ssh
 
 import (
 	"fmt"
+	//	"syscall"
 	//	"github.com/luopengift/golibs/logger"
 	"github.com/luopengift/types"
+	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
+	"io"
 	"io/ioutil"
 	"net"
 	"os"
@@ -79,11 +82,120 @@ func (ep *Endpoint) authMethods() ([]ssh.AuthMethod, error) {
 func (ep *Endpoint) Address() string {
 	addr := ""
 	if ep.Host != "" {
-		addr = ep.Host + ":" + strconv.Itoa(ep.Port)
+		addr = fmt.Sprintf("%s:%d", ep.Host, ep.Port)
 	} else {
 		addr = ep.Ip + ":" + strconv.Itoa(ep.Port)
 	}
 	return addr
+}
+
+func (ep *Endpoint) InitSshClient() (*ssh.Client, error) {
+	auths, err := ep.authMethods()
+
+	if err != nil {
+		return nil, fmt.Errorf("鉴权出错:", err)
+	}
+
+	config := &ssh.ClientConfig{
+		User: ep.User,
+		Auth: auths,
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+		},
+		Timeout: 5 * time.Second,
+	}
+
+	client, err := ssh.Dial("tcp", ep.Address(), config)
+	if err != nil {
+		return nil, fmt.Errorf("建立SSH连接出错:", err)
+	}
+	return client, nil
+}
+
+func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
+	client, err := ep.InitSshClient()
+	if err != nil {
+		return nil, fmt.Errorf("建立SSH连接出错:", err)
+	}
+	defer client.Close()
+
+	sftpClient, err := sftp.NewClient(client)
+
+	if err != nil {
+		return nil, fmt.Errorf("建立sftp出错:", err)
+	}
+	defer sftpClient.Close()
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return nil, fmt.Errorf("读取本地文件出错:", err)
+	}
+	defer srcFile.Close()
+
+	destFile, err := sftpClient.Create(dest)
+	if err != nil {
+		return nil, fmt.Errorf("创建远程文件出错:", err)
+	}
+	defer destFile.Close()
+	size := 0
+	buf := make([]byte, 1024)
+	for {
+		n, err := srcFile.Read(buf)
+		if err != nil && err != io.EOF {
+			return nil, fmt.Errorf("上传文件出错1:", err)
+		}
+		if n == 0 {
+			break
+		}
+		if _, err := destFile.Write(buf[:n]); err != nil {
+			return nil, fmt.Errorf("上传文件出错2:", err)
+		}
+		size += n
+	}
+	return []byte(fmt.Sprintf("文件上传成功,%dkb↑", size)), nil
+}
+
+func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
+	client, err := ep.InitSshClient()
+	if err != nil {
+		return nil, fmt.Errorf("建立SSH连接出错:", err)
+	}
+	defer client.Close()
+
+	sftpClient, err := sftp.NewClient(client)
+
+	if err != nil {
+		return nil, fmt.Errorf("建立sftp出错:", err)
+	}
+	defer sftpClient.Close()
+
+	srcFile, err := sftpClient.Open(src)
+	if err != nil {
+		return nil, fmt.Errorf("读取远程文件出错:", err)
+	}
+	defer srcFile.Close()
+
+	destFile, err := os.Create(dest)
+	if err != nil {
+		return nil, fmt.Errorf("创建本地文件出错:", err)
+	}
+	defer destFile.Close()
+
+	size := 0
+	buf := make([]byte, 1024)
+	for {
+		n, err := srcFile.Read(buf)
+		if err != nil && err != io.EOF {
+			return nil, fmt.Errorf("下载文件出错1:", err)
+		}
+		if n == 0 {
+			break
+		}
+		if _, err := destFile.Write(buf[:n]); err != nil {
+			return nil, fmt.Errorf("下载文件出错2:", err)
+		}
+		size += n
+	}
+	return []byte(fmt.Sprintf("文件下载成功,%dkb↓", size)), nil
 }
 
 func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
