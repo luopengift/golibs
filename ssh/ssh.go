@@ -199,7 +199,7 @@ func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
 }
 
 func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
-	auths, err := ep.authMethods()
+	/*auths, err := ep.authMethods()
 
 	if err != nil {
 		return nil, fmt.Errorf("鉴权出错:", err)
@@ -215,8 +215,10 @@ func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
 	}
 
 	client, err := ssh.Dial("tcp", ep.Address(), config)
+	*/
+	client, err := ep.InitSshClient()
 	if err != nil {
-		return nil, fmt.Errorf("建立连接出错:", err)
+		return nil, fmt.Errorf("建立SSH连接出错:", err)
 	}
 	defer client.Close()
 
@@ -229,7 +231,7 @@ func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
 }
 
 func (ep *Endpoint) StartTerminal() error {
-	auths, err := ep.authMethods()
+	/*auths, err := ep.authMethods()
 
 	if err != nil {
 		return fmt.Errorf("鉴权出错:", err)
@@ -247,6 +249,13 @@ func (ep *Endpoint) StartTerminal() error {
 	client, err := ssh.Dial("tcp", ep.Address(), config)
 	if err != nil {
 		return fmt.Errorf("建立连接出错:", err)
+	}
+	defer client.Close()
+	*/
+
+	client, err := ep.InitSshClient()
+	if err != nil {
+		return fmt.Errorf("建立SSH连接出错:", err)
 	}
 	defer client.Close()
 
