@@ -84,7 +84,6 @@ func (ep *Endpoint) Address() string {
 	} else {
 		addr = ep.Ip + ":" + strconv.Itoa(ep.Port)
 	}
-	addr = ep.Ip + ":" + strconv.Itoa(ep.Port)
 	return addr
 }
 
@@ -197,7 +196,7 @@ func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
 	return []byte(fmt.Sprintf("文件下载成功,%dkb↓", size)), nil
 }
 
-func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
+func (ep *Endpoint) CmdOutBytes1(cmd string) ([]byte, error) {
 	client, err := ep.InitSshClient()
 	if err != nil {
 		return nil, fmt.Errorf("建立SSH连接出错:", err)
@@ -212,7 +211,7 @@ func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
 	return session.CombinedOutput(cmd)
 }
 
-func (ep *Endpoint) CmdOutputBytes1(cmd string) ([]byte, error) {
+func (ep *Endpoint) CmdOutputBytes(cmd string) ([]byte, error) {
 	client, err := ep.InitSshClient()
 	if err != nil {
 		return nil, fmt.Errorf("建立SSH连接出错:", err)
