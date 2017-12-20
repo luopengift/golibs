@@ -8,7 +8,6 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 	"io"
 	"io/ioutil"
-	"net"
 	"os"
 	"strconv"
 	"time"
@@ -92,21 +91,19 @@ func (ep *Endpoint) InitSshClient() (*ssh.Client, error) {
 	auths, err := ep.authMethods()
 
 	if err != nil {
-		return nil, fmt.Errorf("鉴权出错:", err)
+		return nil, fmt.Errorf("鉴权出错: %v", err)
 	}
-
+	timeout := 5
 	config := &ssh.ClientConfig{
-		User: ep.User,
-		Auth: auths,
-		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			return nil
-		},
-		Timeout: 5 * time.Second,
+		User:            ep.User,
+		Auth:            auths,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Duration(timeout) * time.Second,
 	}
 
 	client, err := ssh.Dial("tcp", ep.Address(), config)
 	if err != nil {
-		return nil, fmt.Errorf("建立SSH连接出错:", err)
+		return nil, fmt.Errorf("建立SSH连接出错: %v", err)
 	}
 	return client, nil
 }
@@ -114,25 +111,25 @@ func (ep *Endpoint) InitSshClient() (*ssh.Client, error) {
 func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
 	client, err := ep.InitSshClient()
 	if err != nil {
-		return nil, fmt.Errorf("建立SSH连接出错:", err)
+		return nil, fmt.Errorf("建立SSH连接出错: %v", err)
 	}
 	defer client.Close()
 
 	sftpClient, err := sftp.NewClient(client)
 
 	if err != nil {
-		return nil, fmt.Errorf("建立sftp出错:", err)
+		return nil, fmt.Errorf("建立sftp出错: %v", err)
 	}
 	defer sftpClient.Close()
 	srcFile, err := os.Open(src)
 	if err != nil {
-		return nil, fmt.Errorf("读取本地文件出错:", err)
+		return nil, fmt.Errorf("读取本地文件出错: %v", err)
 	}
 	defer srcFile.Close()
 
 	destFile, err := sftpClient.Create(dest)
 	if err != nil {
-		return nil, fmt.Errorf("创建远程文件出错:", err)
+		return nil, fmt.Errorf("创建远程文件出错: %v", err)
 	}
 	defer destFile.Close()
 	size := 0
@@ -140,13 +137,13 @@ func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
 	for {
 		n, err := srcFile.Read(buf)
 		if err != nil && err != io.EOF {
-			return nil, fmt.Errorf("上传文件出错1:", err)
+			return nil, fmt.Errorf("上传文件出错1: %v", err)
 		}
 		if n == 0 {
 			break
 		}
 		if _, err := destFile.Write(buf[:n]); err != nil {
-			return nil, fmt.Errorf("上传文件出错2:", err)
+			return nil, fmt.Errorf("上传文件出错2: %v", err)
 		}
 		size += n
 	}
@@ -156,26 +153,26 @@ func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
 func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
 	client, err := ep.InitSshClient()
 	if err != nil {
-		return nil, fmt.Errorf("建立SSH连接出错:", err)
+		return nil, fmt.Errorf("建立SSH连接出错: %v", err)
 	}
 	defer client.Close()
 
 	sftpClient, err := sftp.NewClient(client)
 
 	if err != nil {
-		return nil, fmt.Errorf("建立sftp出错:", err)
+		return nil, fmt.Errorf("建立sftp出错: %v", err)
 	}
 	defer sftpClient.Close()
 
 	srcFile, err := sftpClient.Open(src)
 	if err != nil {
-		return nil, fmt.Errorf("读取远程文件出错:", err)
+		return nil, fmt.Errorf("读取远程文件出错: %v", err)
 	}
 	defer srcFile.Close()
 
 	destFile, err := os.Create(dest)
 	if err != nil {
-		return nil, fmt.Errorf("创建本地文件出错:", err)
+		return nil, fmt.Errorf("创建本地文件出错: %v", err)
 	}
 	defer destFile.Close()
 
@@ -184,13 +181,13 @@ func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
 	for {
 		n, err := srcFile.Read(buf)
 		if err != nil && err != io.EOF {
-			return nil, fmt.Errorf("下载文件出错1:", err)
+			return nil, fmt.Errorf("下载文件出错1: %v", err)
 		}
 		if n == 0 {
 			break
 		}
 		if _, err := destFile.Write(buf[:n]); err != nil {
-			return nil, fmt.Errorf("下载文件出错2:", err)
+			return nil, fmt.Errorf("下载文件出错2: %v", err)
 		}
 		size += n
 	}
@@ -200,80 +197,32 @@ func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
 func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
 	client, err := ep.InitSshClient()
 	if err != nil {
-		return nil, fmt.Errorf("建立SSH连接出错:", err)
+		return nil, fmt.Errorf("建立SSH连接出错: %v", err)
 	}
 	defer client.Close()
 
 	session, err := client.NewSession()
 	if err != nil {
-		return nil, fmt.Errorf("创建Session出错:", err)
+		return nil, fmt.Errorf("创建Session出错: %v", err)
 	}
 	defer session.Close()
 	return session.CombinedOutput(cmd)
 }
 
-func (ep *Endpoint) CmdOutputBytes1(cmd string) ([]byte, error) {
-	client, err := ep.InitSshClient()
-	if err != nil {
-		return nil, fmt.Errorf("建立SSH连接出错:", err)
-	}
-	defer client.Close()
-
-	session, err := client.NewSession()
-	if err != nil {
-		return nil, fmt.Errorf("创建Session出错:", err)
-	}
-
-	defer session.Close()
-
-	fd := int(os.Stdin.Fd())
-	oldState, err := terminal.MakeRaw(fd)
-	if err != nil {
-		return nil, fmt.Errorf("创建文件描述符出错:", err)
-
-	}
-	session.Stdout = os.Stdout
-	session.Stderr = os.Stderr
-	session.Stdin = os.Stdin
-
-	size := &WindowSize{}
-
-	defer terminal.Restore(fd, oldState)
-
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          0,
-		ssh.TTY_OP_ISPEED: 14400,
-		ssh.TTY_OP_OSPEED: 14400,
-	}
-
-	if err := session.RequestPty("xterm-256color", size.Height, size.Width, modes); err != nil {
-		return nil, fmt.Errorf("创建终端出错:", err)
-	}
-
-	err = session.Shell()
-	if err != nil {
-		return nil, fmt.Errorf("执行Shell出错:", err)
-	}
-	err = session.Wait()
-	if err != nil {
-		return nil, fmt.Errorf("执行Wait出错:", err)
-	}
-	return nil, nil
-
-}
-
 func (ep *Endpoint) StartTerminal() error {
 	client, err := ep.InitSshClient()
 	if err != nil {
-		return fmt.Errorf("建立SSH连接出错:", err)
+		return fmt.Errorf("建立SSH连接出错: %v", err)
 	}
 	defer client.Close()
 
 	session, err := client.NewSession()
 	if err != nil {
-		return fmt.Errorf("创建Session出错:", err)
+		return fmt.Errorf("创建Session出错: %v", err)
 	}
 	defer session.Close()
+
+	session.Setenv("LANG", "zh_CN.UTF-8")
 
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
@@ -282,7 +231,7 @@ func (ep *Endpoint) StartTerminal() error {
 	fd := int(os.Stdin.Fd())
 	oldState, err := terminal.MakeRaw(fd)
 	if err != nil {
-		return fmt.Errorf("创建文件描述符出错:", err)
+		return fmt.Errorf("创建文件描述符出错: %v", err)
 	}
 
 	size := &WindowSize{}
@@ -293,11 +242,11 @@ func (ep *Endpoint) StartTerminal() error {
 			case <-t.C:
 				size.Width, size.Height, err = terminal.GetSize(fd)
 				if err != nil {
-					return fmt.Errorf("获取窗口宽高出错:", err)
+					return fmt.Errorf("获取窗口宽高出错: %v", err)
 				}
 				err = session.WindowChange(size.Height, size.Width)
 				if err != nil {
-					return fmt.Errorf("改变窗口大小出错:", err)
+					return fmt.Errorf("改变窗口大小出错: %v", err)
 				}
 				t.Reset(500 * time.Millisecond)
 			}
@@ -306,23 +255,23 @@ func (ep *Endpoint) StartTerminal() error {
 	defer terminal.Restore(fd, oldState)
 
 	modes := ssh.TerminalModes{
-		ssh.ECHO:          1,	//是否回显输入的命令
+		ssh.ECHO:          1, //是否回显输入的命令
 		ssh.TTY_OP_ISPEED: 14400,
 		ssh.TTY_OP_OSPEED: 14400,
 	}
 
 	if err := session.RequestPty("xterm-256color", size.Height, size.Width, modes); err != nil {
-		return fmt.Errorf("创建终端出错:", err)
+		return fmt.Errorf("创建终端出错: %v", err)
 	}
 
 	err = session.Shell()
 	if err != nil {
-		return fmt.Errorf("执行Shell出错:", err)
+		return fmt.Errorf("执行Shell出错: %v", err)
 	}
 
 	err = session.Wait()
 	if err != nil {
-		return fmt.Errorf("执行Wait出错:", err)
+		return fmt.Errorf("执行Wait出错: %v", err)
 	}
 	return nil
 }

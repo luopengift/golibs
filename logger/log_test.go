@@ -10,9 +10,9 @@ func Test_logger(t *testing.T) {
 	Trace("1234567")
 	Debug("<%s,%s>", "hello", "xxx")
 	Info("hello")
-	Warn("hello", "xxx")
-	Error("hello", "xxx")
-	Fatal("hello", "xxx")
+	Warn("hello %s", "xxx")
+	Error("hello %s", "xxx")
+	Fatal("hello %s", "xxx")
 	//Panic("hello", "xxx")
 
 }
@@ -24,9 +24,9 @@ func Benchmark_logger(b *testing.B) {
 		Trace("1234567")
 		Debug("<%s,%s>", "hello", "xxx")
 		Info("hello")
-		Warn("hello", "xxx")
-		Error("hello", "xxx")
-		Fatal("hello", "xxx")
+		Warn("hello %s", "xxx")
+		Error("hello %s", "xxx")
+		Fatal("hello %s", "xxx")
 		//Panic("hello", "xxx")
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"time"
 )
 
@@ -39,6 +40,7 @@ type Logger struct {
 	prefix     string
 	color      bool
 	out        []io.Writer
+	stack      bool // 堆栈信息
 }
 
 func NewLogger(timeFormat string, lv uint8, out ...io.Writer) *Logger {
@@ -48,6 +50,7 @@ func NewLogger(timeFormat string, lv uint8, out ...io.Writer) *Logger {
 		prefix:     "",
 		color:      true,
 		out:        out,
+		stack:      false,
 	}
 }
 
@@ -71,6 +74,10 @@ func (log *Logger) SetOutput(out ...io.Writer) {
 	log.out = out
 }
 
+func (log *Logger) SetStack(stack bool) {
+	log.stack = stack
+}
+
 func (log *Logger) format(lv uint8, format string) string {
 	var buf bytes.Buffer
 	if log.timeFormat != "" {
@@ -85,6 +92,9 @@ func (log *Logger) format(lv uint8, format string) string {
 		buf.WriteString(log.prefix)
 		buf.WriteString(" ")
 	}
+	if log.stack && lv >= ERROR {
+		debug.PrintStack()
+	}
 	buf.WriteString(format)
 	buf.WriteString(" ")
 	str := buf.String()
@@ -94,7 +104,7 @@ func (log *Logger) format(lv uint8, format string) string {
 	return str
 }
 
-func (log *Logger) writeLog(lv uint8, format string, msg ...interface{}) error {
+func (log *Logger) Output(lv uint8, format string, msg ...interface{}) error {
 	if lv < log.lv {
 		return nil
 	}
@@ -109,25 +119,25 @@ func (log *Logger) output(format string, msg ...interface{}) {
 }
 
 func (log *Logger) Trace(format string, msg ...interface{}) {
-	log.writeLog(TRACE, format, msg...)
+	log.Output(TRACE, format, msg...)
 }
 
 func (log *Logger) Debug(format string, msg ...interface{}) {
-	log.writeLog(DEBUG, format, msg...)
+	log.Output(DEBUG, format, msg...)
 }
 func (log *Logger) Info(format string, msg ...interface{}) {
-	log.writeLog(INFO, format, msg...)
+	log.Output(INFO, format, msg...)
 }
 func (log *Logger) Warn(format string, msg ...interface{}) {
-	log.writeLog(WARNING, format, msg...)
+	log.Output(WARNING, format, msg...)
 }
 func (log *Logger) Error(format string, msg ...interface{}) {
-	log.writeLog(ERROR, format, msg...)
+	log.Output(ERROR, format, msg...)
 }
 func (log *Logger) Fatal(format string, msg ...interface{}) {
-	log.writeLog(FATAL, format, msg...)
+	log.Output(FATAL, format, msg...)
 }
 func (log *Logger) Panic(format string, msg ...interface{}) {
-	log.writeLog(PANIC, format, msg...)
+	log.Output(PANIC, format, msg...)
 	panic(fmt.Sprintf(format, msg...))
 }
