@@ -49,7 +49,7 @@ func (ep *Endpoint) Init(filename string) error {
 func (ep *Endpoint) authMethods() ([]ssh.AuthMethod, error) {
 	authMethods := []ssh.AuthMethod{}
 
-	ep.Passwords = append(ep.Passwords, ep.Password, "dd")
+	ep.Passwords = append(ep.Passwords, ep.Password)
 	if length := len(ep.Passwords); length != 0 {
 		n := 0
 		authMethod := ssh.RetryableAuthMethod(ssh.PasswordCallback(func() (string, error) {
@@ -136,11 +136,11 @@ func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
 	defer client.Close()
 
 	sftpClient, err := sftp.NewClient(client)
-
 	if err != nil {
 		return nil, fmt.Errorf("建立sftp出错: %v", err)
 	}
 	defer sftpClient.Close()
+
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return nil, fmt.Errorf("读取本地文件出错: %v", err)
@@ -152,6 +152,7 @@ func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
 		return nil, fmt.Errorf("创建远程文件出错: %v", err)
 	}
 	defer destFile.Close()
+
 	size := 0
 	buf := make([]byte, 1024)
 	for {
@@ -178,7 +179,6 @@ func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
 	defer client.Close()
 
 	sftpClient, err := sftp.NewClient(client)
-
 	if err != nil {
 		return nil, fmt.Errorf("建立sftp出错: %v", err)
 	}
@@ -226,6 +226,7 @@ func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
 		return nil, fmt.Errorf("创建Session出错: %v", err)
 	}
 	defer session.Close()
+
 	return session.CombinedOutput(cmd)
 }
 
@@ -253,6 +254,7 @@ func (ep *Endpoint) StartTerminal() error {
 	if err != nil {
 		return fmt.Errorf("创建文件描述符出错: %v", err)
 	}
+	defer terminal.Restore(fd, oldState)
 
 	width, height := 0, 0
 	go func() error {
@@ -272,7 +274,6 @@ func (ep *Endpoint) StartTerminal() error {
 			}
 		}
 	}()
-	defer terminal.Restore(fd, oldState)
 
 	modes := ssh.TerminalModes{
 		ssh.ECHO:          1, //是否回显输入的命令
@@ -291,7 +292,7 @@ func (ep *Endpoint) StartTerminal() error {
 
 	err = session.Wait()
 	if err != nil {
-		return nil// fmt.Errorf("执行Wait出错: %v", err)
+		return nil // fmt.Errorf("执行Wait出错: %v", err)
 	}
 	return nil
 }
