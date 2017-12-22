@@ -14,18 +14,15 @@ import (
 )
 
 type Endpoint struct {
-	Name     string `yaml:"name"`
-	Host     string `yaml:"host"`
-	Ip       string `yaml:"ip"`
-	Port     int    `yaml:"port"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Key      string `yaml:"key"`
-}
-
-type WindowSize struct {
-	Width  int
-	Height int
+	Name      string            `yaml:"name"`
+	Host      string            `yaml:"host"`
+	Ip        string            `yaml:"ip"`
+	Port      int               `yaml:"port"`
+	User      string            `yaml:"user"`
+	Password  string            `yaml:"password"`
+	Passwords []string          `yaml:"passwords"` //密码列表
+	Key       string            `yaml:"key"`
+	QAs       map[string]string `yaml:"qas"` //questions-answers
 }
 
 func NewEndpoint() *Endpoint {
@@ -50,8 +47,17 @@ func (ep *Endpoint) Init(filename string) error {
 
 // 解析登录方式
 func (ep *Endpoint) authMethods() ([]ssh.AuthMethod, error) {
-	authMethods := []ssh.AuthMethod{
-		ssh.Password(ep.Password),
+	authMethods := []ssh.AuthMethod{}
+
+	ep.Passwords = append(ep.Passwords, ep.Password, "dd")
+	if length := len(ep.Passwords); length != 0 {
+		n := 0
+		authMethod := ssh.RetryableAuthMethod(ssh.PasswordCallback(func() (string, error) {
+			password := ep.Passwords[n]
+			n++
+			return password, nil
+		}), length)
+		authMethods = append(authMethods, authMethod)
 	}
 
 	if ep.Key == "" {
@@ -71,9 +77,27 @@ func (ep *Endpoint) authMethods() ([]ssh.AuthMethod, error) {
 	if err != nil {
 		return authMethods, err
 	}
-	// Use the PublicKeys method for remote authentication.
 	authMethods = append(authMethods, ssh.PublicKeys(signer))
+
+	if ep.QAs != nil {
+		answers := keyboardInteractive(ep.QAs)
+		authMethods = append(authMethods, ssh.PublicKeys(signer), ssh.KeyboardInteractive(answers.Challenge))
+	}
 	return authMethods, nil
+}
+
+type keyboardInteractive map[string]string
+
+func (cr keyboardInteractive) Challenge(user, instruction string, questions []string, echos []bool) ([]string, error) {
+	var answers []string
+	for _, question := range questions {
+		answer, ok := cr[question]
+		if !ok {
+			return nil, fmt.Errorf("question[%s] not answer", question)
+		}
+		answers = append(answers, answer)
+	}
+	return answers, nil
 }
 
 func (ep *Endpoint) Address() string {
@@ -101,11 +125,7 @@ func (ep *Endpoint) InitSshClient() (*ssh.Client, error) {
 		Timeout:         time.Duration(timeout) * time.Second,
 	}
 
-	client, err := ssh.Dial("tcp", ep.Address(), config)
-	if err != nil {
-		return nil, fmt.Errorf("建立SSH连接出错: %v", err)
-	}
-	return client, nil
+	return ssh.Dial("tcp", ep.Address(), config)
 }
 
 func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
@@ -234,17 +254,17 @@ func (ep *Endpoint) StartTerminal() error {
 		return fmt.Errorf("创建文件描述符出错: %v", err)
 	}
 
-	size := &WindowSize{}
+	width, height := 0, 0
 	go func() error {
 		t := time.NewTimer(time.Millisecond * 0)
 		for {
 			select {
 			case <-t.C:
-				size.Width, size.Height, err = terminal.GetSize(fd)
+				width, height, err = terminal.GetSize(fd)
 				if err != nil {
 					return fmt.Errorf("获取窗口宽高出错: %v", err)
 				}
-				err = session.WindowChange(size.Height, size.Width)
+				err = session.WindowChange(height, width)
 				if err != nil {
 					return fmt.Errorf("改变窗口大小出错: %v", err)
 				}
@@ -260,7 +280,7 @@ func (ep *Endpoint) StartTerminal() error {
 		ssh.TTY_OP_OSPEED: 14400,
 	}
 
-	if err := session.RequestPty("xterm-256color", size.Height, size.Width, modes); err != nil {
+	if err := session.RequestPty("xterm-256color", height, width, modes); err != nil {
 		return fmt.Errorf("创建终端出错: %v", err)
 	}
 
@@ -271,7 +291,7 @@ func (ep *Endpoint) StartTerminal() error {
 
 	err = session.Wait()
 	if err != nil {
-		return fmt.Errorf("执行Wait出错: %v", err)
+		return nil// fmt.Errorf("执行Wait出错: %v", err)
 	}
 	return nil
 }
