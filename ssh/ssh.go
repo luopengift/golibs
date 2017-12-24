@@ -154,7 +154,7 @@ func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
 	defer destFile.Close()
 
 	size := 0
-	buf := make([]byte, 1024)
+	buf := make([]byte, 1024 * 1024)
 	for {
 		n, err := srcFile.Read(buf)
 		if err != nil && err != io.EOF {
@@ -168,7 +168,7 @@ func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
 		}
 		size += n
 	}
-	return []byte(fmt.Sprintf("文件上传成功,%dkb↑", size)), nil
+	return []byte(fmt.Sprintf("文件上传成功,%dbyte↑", size)), nil
 }
 
 func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
@@ -197,7 +197,7 @@ func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
 	defer destFile.Close()
 
 	size := 0
-	buf := make([]byte, 1024)
+	buf := make([]byte, 1024 * 1024)
 	for {
 		n, err := srcFile.Read(buf)
 		if err != nil && err != io.EOF {
@@ -211,7 +211,7 @@ func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
 		}
 		size += n
 	}
-	return []byte(fmt.Sprintf("文件下载成功,%dkb↓", size)), nil
+	return []byte(fmt.Sprintf("文件下载成功,%dbyte↓", size)), nil
 }
 
 func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
