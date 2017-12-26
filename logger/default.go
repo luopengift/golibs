@@ -26,6 +26,9 @@ func SetColor(color bool) {
 func SetOutput(out ...io.Writer) {
 	MyLogger.out = out
 }
+func Output(lv uint8, format string, msg ...interface{}) {
+	MyLogger.Output(lv, format, msg...)
+}
 
 func Trace(format string, msg ...interface{}) {
 	MyLogger.Trace(format, msg...)
