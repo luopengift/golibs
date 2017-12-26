@@ -143,13 +143,13 @@ func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
 
 	srcFile, err := os.Open(src)
 	if err != nil {
-		return nil, fmt.Errorf("读取本地文件出错: %v", err)
+		return nil, fmt.Errorf("读取本地文件[%s]出错: %v", src, err)
 	}
 	defer srcFile.Close()
 
 	destFile, err := sftpClient.Create(dest)
 	if err != nil {
-		return nil, fmt.Errorf("创建远程文件出错: %v", err)
+		return nil, fmt.Errorf("创建远程文件[%s]出错: %v", dest, err)
 	}
 	defer destFile.Close()
 
@@ -186,13 +186,13 @@ func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
 
 	srcFile, err := sftpClient.Open(src)
 	if err != nil {
-		return nil, fmt.Errorf("读取远程文件出错: %v", err)
+		return nil, fmt.Errorf("读取远程文件[%s]出错: %v", src, err)
 	}
 	defer srcFile.Close()
 
 	destFile, err := os.Create(dest)
 	if err != nil {
-		return nil, fmt.Errorf("创建本地文件出错: %v", err)
+		return nil, fmt.Errorf("创建本地文件[%s]出错: %v", dest, err)
 	}
 	defer destFile.Close()
 
