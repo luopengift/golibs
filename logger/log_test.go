@@ -1,8 +1,15 @@
 package logger
 
 import (
+	"os"
 	"testing"
 )
+
+func Test_FileHandler(t *testing.T) {
+	f := NewFileWriter("tmp/test_%Y%M%D%h%m%s.log", 1)
+	MyLogger.SetOutput(f, os.Stdout)
+	Info("@@@@@@@@@@@")
+}
 
 func Test_logger(t *testing.T) {
 	MyLogger.SetLevel(NULL)
