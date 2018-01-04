@@ -3,7 +3,6 @@ package logger
 import (
 	"github.com/luopengift/types"
 	"io"
-	"io/ioutil"
 	"path"
 	"os"
 	"strconv"
@@ -51,10 +50,25 @@ func (f *FileWriter) handler() string {
 
 func (f *FileWriter) Write(p []byte) (int, error) {
 	f.handler()
-	if err := ioutil.WriteFile(f.RealName, p, 0644); err != nil {
+	if err := write(f.RealName, p, 0644); err != nil {
 		return 0, err
 	}
 	return len(p), nil
 }
 
+
+func write(filename string, data []byte, perm os.FileMode) error {
+    f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, perm)
+    if err != nil {
+        return err
+    }
+    n, err := f.Write(data)
+    if err == nil && n < len(data) {
+        err = io.ErrShortWrite
+    }
+    if err1 := f.Close(); err == nil {
+        err = err1
+    }
+    return err
+}
 
