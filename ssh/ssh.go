@@ -23,6 +23,7 @@ type Endpoint struct {
 	Passwords []string          `yaml:"passwords"` //密码列表
 	Key       string            `yaml:"key"`
 	QAs       map[string]string `yaml:"qas"` //questions-answers
+	Timeout   int               `yaml:"timeout"`
 }
 
 func NewEndpoint() *Endpoint {
@@ -38,11 +39,16 @@ func NewEndpointWithValue(name, host, ip string, port int, user, password, key s
 		User:     user,
 		Password: password,
 		Key:      key,
+		Timeout:  5,
 	}
 }
 
 func (ep *Endpoint) Init(filename string) error {
 	return types.ParseConfigFile(filename, ep)
+}
+
+func (ep *Endpoint) SetTimeout(timeout int) {
+	ep.Timeout = timeout
 }
 
 // 解析登录方式
@@ -117,12 +123,11 @@ func (ep *Endpoint) InitSshClient() (*ssh.Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("鉴权出错: %v", err)
 	}
-	timeout := 5
 	config := &ssh.ClientConfig{
 		User:            ep.User,
 		Auth:            auths,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         time.Duration(timeout) * time.Second,
+		Timeout:         time.Duration(ep.Timeout) * time.Second,
 	}
 
 	return ssh.Dial("tcp", ep.Address(), config)
@@ -154,7 +159,7 @@ func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
 	defer destFile.Close()
 
 	size := 0
-	buf := make([]byte, 1024 * 1024)
+	buf := make([]byte, 1024*1024)
 	for {
 		n, err := srcFile.Read(buf)
 		if err != nil && err != io.EOF {
@@ -197,7 +202,7 @@ func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
 	defer destFile.Close()
 
 	size := 0
-	buf := make([]byte, 1024 * 1024)
+	buf := make([]byte, 1024*1024)
 	for {
 		n, err := srcFile.Read(buf)
 		if err != nil && err != io.EOF {
