@@ -8,9 +8,9 @@ import (
 )
 
 type Email struct {
-	Host     string	`yaml:"host"`
-	Username string	`yaml:"username"`
-	Password string	`yaml:"password"`
+	Host     string `yaml:"host"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
 }
 
 func NewEmail(host, username, password string) *Email {

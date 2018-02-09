@@ -23,7 +23,7 @@ type Content struct {
 
 func NewContent() *Content {
 	return &Content{
-		Date:	time.Now(),
+		Date: time.Now(),
 	}
 }
 
@@ -74,7 +74,7 @@ func (ctn *Content) Bytes() []byte {
 
 	fmt.Fprintf(&content, "\r\n")
 
-	fmt.Fprintf(&content, ctn.Body)
+	fmt.Fprintf(&content, "%v", ctn.Body)
 
 	return content.Bytes()
 }

@@ -1,8 +1,8 @@
 package email
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func Test_Send(t *testing.T) {
