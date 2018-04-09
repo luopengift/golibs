@@ -133,28 +133,28 @@ func (ep *Endpoint) InitSshClient() (*ssh.Client, error) {
 	return ssh.Dial("tcp", ep.Address(), config)
 }
 
-func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
+func (ep *Endpoint) Upload(src, dest string) error {
 	client, err := ep.InitSshClient()
 	if err != nil {
-		return nil, fmt.Errorf("建立SSH连接出错: %v", err)
+		return fmt.Errorf("建立ssh连接出错: %v", err)
 	}
 	defer client.Close()
 
 	sftpClient, err := sftp.NewClient(client)
 	if err != nil {
-		return nil, fmt.Errorf("建立sftp出错: %v", err)
+		return fmt.Errorf("建立sftp出错: %v", err)
 	}
 	defer sftpClient.Close()
 
 	srcFile, err := os.Open(src)
 	if err != nil {
-		return nil, fmt.Errorf("读取本地文件[%s]出错: %v", src, err)
+		return fmt.Errorf("读取本地文件[%s]出错: %v", src, err)
 	}
 	defer srcFile.Close()
 
 	destFile, err := sftpClient.Create(dest)
 	if err != nil {
-		return nil, fmt.Errorf("创建远程文件[%s]出错: %v", dest, err)
+		return fmt.Errorf("创建远程文件[%s]出错: %v", dest, err)
 	}
 	defer destFile.Close()
 
@@ -163,41 +163,41 @@ func (ep *Endpoint) Upload(src, dest string) ([]byte, error) {
 	for {
 		n, err := srcFile.Read(buf)
 		if err != nil && err != io.EOF {
-			return nil, fmt.Errorf("上传文件出错1: %v", err)
+			return fmt.Errorf("上传文件read出错1: %v", err)
 		}
 		if n == 0 {
 			break
 		}
 		if _, err := destFile.Write(buf[:n]); err != nil {
-			return nil, fmt.Errorf("上传文件出错2: %v", err)
+			return fmt.Errorf("上传文件write出错2: %v", err)
 		}
 		size += n
 	}
-	return []byte(fmt.Sprintf("文件上传成功,%dbyte↑", size)), nil
+	return nil
 }
 
-func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
+func (ep *Endpoint) Download(src, dest string) error {
 	client, err := ep.InitSshClient()
 	if err != nil {
-		return nil, fmt.Errorf("建立SSH连接出错: %v", err)
+		return fmt.Errorf("建立ssh连接出错: %v", err)
 	}
 	defer client.Close()
 
 	sftpClient, err := sftp.NewClient(client)
 	if err != nil {
-		return nil, fmt.Errorf("建立sftp出错: %v", err)
+		return fmt.Errorf("建立sftp出错: %v", err)
 	}
 	defer sftpClient.Close()
 
 	srcFile, err := sftpClient.Open(src)
 	if err != nil {
-		return nil, fmt.Errorf("读取远程文件[%s]出错: %v", src, err)
+		return fmt.Errorf("读取远程文件[%s]出错: %v", src, err)
 	}
 	defer srcFile.Close()
 
 	destFile, err := os.Create(dest)
 	if err != nil {
-		return nil, fmt.Errorf("创建本地文件[%s]出错: %v", dest, err)
+		return fmt.Errorf("创建本地文件[%s]出错: %v", dest, err)
 	}
 	defer destFile.Close()
 
@@ -206,17 +206,17 @@ func (ep *Endpoint) Download(src, dest string) ([]byte, error) {
 	for {
 		n, err := srcFile.Read(buf)
 		if err != nil && err != io.EOF {
-			return nil, fmt.Errorf("下载文件出错1: %v", err)
+			return fmt.Errorf("下载文件read出错1: %v", err)
 		}
 		if n == 0 {
 			break
 		}
 		if _, err := destFile.Write(buf[:n]); err != nil {
-			return nil, fmt.Errorf("下载文件出错2: %v", err)
+			return fmt.Errorf("下载文件write出错2: %v", err)
 		}
 		size += n
 	}
-	return []byte(fmt.Sprintf("文件下载成功,%dbyte↓", size)), nil
+	return nil
 }
 
 func (ep *Endpoint) CmdOutBytes(cmd string) ([]byte, error) {
