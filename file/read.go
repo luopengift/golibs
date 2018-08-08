@@ -5,10 +5,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/luopengift/golibs/logger"
 	"io"
 	"os"
 	"time"
+
+	"github.com/luopengift/golibs/logger"
 )
 
 type Tail struct {
@@ -51,6 +52,7 @@ func (self *Tail) Close() error {
 func (self *Tail) ReOpen() error {
 	if err := self.File.Close(); err != nil {
 		logger.Error("<file %v close fail:%v>", self.name, err)
+		return err
 	}
 	self.name = self.Handler.Handle(self.cname)
 	err := self.Open()
