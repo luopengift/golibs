@@ -11,11 +11,11 @@ import (
 // GoogleAuth time slice is 30 second,
 // if the key is invalid, return code is zero and ignore the error.
 func GoogleAuth(key string) uint32 {
-	if code, _, err := TotpToken(key, 30); err != nil {
+	code, _, err := TotpToken(key, 30)
+	if err != nil {
 		return 0
-	} else {
-		return code
 	}
+	return code
 }
 
 // TotpToken implements TOTP Algorithm, based on HOTP.

@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 )
 
-//生成字符串的MD5值
+// MD5 生成字符串的MD5值
 func MD5(str ...string) string {
 	h := md5.New()
 	for _, s := range str {
