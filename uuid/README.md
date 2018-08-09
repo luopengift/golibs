@@ -11,6 +11,4 @@ uuid is a lightweight implementation for [Univerally unique identifier](http://e
     id2 := uuid.MustFromStr("1870747db26c450795181ca62bc66e5d")
     fmt.Println(id1 == id2) // true
 
-
 Copied from: https://github.com/snluu/uuid
-
