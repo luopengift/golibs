@@ -27,7 +27,7 @@ func CmdOut(name string, arg ...string) ([]byte, error) {
 
 // CmdOutWithTimeout timeout
 func CmdOutWithTimeout(ctx context.Context, command string, timeout int) ([]byte, error) {
-	cmd := exec.Command("/bin/bash", "-c", command)
+	cmd := exec.CommandContext(ctx, "/bin/bash", "-c", command)
 	done := make(chan error)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
