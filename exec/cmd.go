@@ -2,16 +2,19 @@ package exec
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os/exec"
 	"strings"
 	"time"
 )
 
+// Cmd cmd struct
 func Cmd(name string, arg ...string) *exec.Cmd {
 	return exec.Command(name, arg...)
 }
 
+// CmdOut out bytes
 func CmdOut(name string, arg ...string) ([]byte, error) {
 	cmd := exec.Command(name, arg...)
 	out, err := cmd.CombinedOutput()
@@ -22,7 +25,8 @@ func CmdOut(name string, arg ...string) ([]byte, error) {
 	return out, nil
 }
 
-func CmdOutWithTimeout(command string, timeout int) ([]byte, error) {
+// CmdOutWithTimeout timeout
+func CmdOutWithTimeout(ctx context.Context, command string, timeout int) ([]byte, error) {
 	cmd := exec.Command("/bin/bash", "-c", command)
 	done := make(chan error)
 	var stdout, stderr bytes.Buffer
@@ -34,6 +38,12 @@ func CmdOutWithTimeout(command string, timeout int) ([]byte, error) {
 	}()
 
 	select {
+	case <-ctx.Done():
+		err := cmd.Process.Kill() // timeout
+		if err != nil {
+			return stdout.Bytes(), fmt.Errorf(stderr.String() + err.Error() + ctx.Err().Error())
+		}
+		return stdout.Bytes(), fmt.Errorf(stderr.String() + ctx.Err().Error())
 	case <-time.After(time.Duration(timeout) * time.Second):
 		err := cmd.Process.Kill() // timeout
 		if err != nil {
