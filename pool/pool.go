@@ -2,11 +2,12 @@ package pool
 
 import (
 	"fmt"
-	"github.com/luopengift/golibs/channel"
-	"github.com/luopengift/golibs/logger"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/luopengift/golibs/channel"
+	"github.com/luopengift/log"
 )
 
 type Factory func() (interface{}, error)
@@ -19,12 +20,12 @@ type Pool struct {
 	factory Factory          //连接生成方式
 	pool    chan *Ctx        //连接存放的channel
 	channel *channel.Channel //并发最大连接控制
-	log     *logger.Logger
+	logger  *log.Log
 }
 
 func NewPool(maxIdle, maxOpen, timeout int, factory Factory) *Pool {
 	if maxIdle < 0 || maxOpen <= 0 || maxIdle > maxOpen {
-		logger.Error("maxIdle or maxOpen args error!")
+		log.Error("maxIdle or maxOpen args error!")
 		return nil
 	}
 	p := new(Pool)
@@ -35,8 +36,8 @@ func NewPool(maxIdle, maxOpen, timeout int, factory Factory) *Pool {
 	p.factory = factory
 	p.pool = make(chan *Ctx, p.maxOpen)
 	p.channel = channel.NewChannel(p.maxOpen)
-	p.log = logger.NewLogger("2006/01/02 15:04:05.000", logger.INFO, os.Stdout)
-	p.log.SetPrefix("<conn pool>")
+	p.logger = log.NewLog("2006/01/02 15:04:05.000", log.INFO, os.Stdout)
+	p.logger.SetPrefix("<conn pool>")
 	for i := 0; i < p.maxIdle; i++ {
 		if err := p.create(); err != nil {
 			p.log.Error("%v", err)
