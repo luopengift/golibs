@@ -9,9 +9,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/luopengift/golibs/logger"
+	"github.com/luopengift/log"
 )
 
+// Tail tail
 type Tail struct {
 	*File
 	cname    string //config name
@@ -25,6 +26,7 @@ type Tail struct {
 	endstop bool
 }
 
+// NewTail new tail
 func NewTail(cname string, handler Handler) *Tail {
 	name := handler.Handle(cname)
 	file := NewFile(name, os.O_RDONLY)
@@ -40,90 +42,97 @@ func NewTail(cname string, handler Handler) *Tail {
 	return tail
 }
 
-func (self *Tail) EndStop(b bool) {
-	self.endstop = b
+// EndStop end stop
+func (t *Tail) EndStop(b bool) {
+	t.endstop = b
 }
 
-func (self *Tail) Close() error {
-	close(self.line)
-	return self.File.Close()
+// Close close
+func (t *Tail) Close() error {
+	close(t.line)
+	return t.File.Close()
 }
 
-func (self *Tail) ReOpen() error {
-	if err := self.File.Close(); err != nil {
-		logger.Error("<file %v close fail:%v>", self.name, err)
+// ReOpen re open
+func (t *Tail) ReOpen() error {
+	if err := t.File.Close(); err != nil {
+		log.Error("<file %v close fail:%v>", t.name, err)
 		return err
 	}
-	self.name = self.Handler.Handle(self.cname)
-	err := self.Open()
+	t.name = t.Handler.Handle(t.cname)
+	err := t.Open()
 	if err != nil {
 		return err
 	}
-	self.reader = bufio.NewReader(self.fd)
+	t.reader = bufio.NewReader(t.fd)
 	return nil
 }
 
-func (self *Tail) Stop() {
-	self.File.Close()
-	close(self.line)
+// Stop stop
+func (t *Tail) Stop() {
+	t.File.Close()
+	close(t.line)
 }
 
-func (self *Tail) ReadLine() {
+// ReadLine read line
+func (t *Tail) ReadLine() {
 	go func() {
 
-		offset, err := self.TrancateOffsetByLF(self.seek)
+		offset, err := t.TrancateOffsetByLF(t.seek)
 		if err != nil {
-			logger.Error("<Trancate offset:%d,Error:%+v>", self.seek, err)
+			log.Error("<Trancate offset:%d,Error:%+v>", t.seek, err)
 		}
-		err = self.Seek(offset)
+		err = t.Seek(offset)
 		if err != nil {
-			logger.Error("<seek offset[%d] error:%+v>", self.seek, err)
+			log.Error("<seek offset[%d] error:%+v>", t.seek, err)
 		}
 
 		for {
-			line, err := self.reader.ReadBytes('\n')
+			line, err := t.reader.ReadBytes('\n')
 			switch {
 			case err == io.EOF:
-				if self.endstop {
-					logger.Info("<file %s is END:%+v>", self.name, err)
-					self.Stop()
+				if t.endstop {
+					log.Info("<file %s is END:%+v>", t.name, err)
+					t.Stop()
 					return
 				}
-				time.Sleep(time.Duration(self.interval) * time.Millisecond)
-				if self.name == self.cname {
-					if self.IsSameFile(self.name) {
+				time.Sleep(time.Duration(t.interval) * time.Millisecond)
+				if t.name == t.cname {
+					if t.IsSameFile(t.name) {
 						continue
 					} else {
-						self.ReOpen()
+						t.ReOpen()
 					}
 				} else {
-					if self.name == self.Handler.Handle(self.cname) { //检测是否需要按时间轮转新文件
+					if t.name == t.Handler.Handle(t.cname) { //检测是否需要按时间轮转新文件
 						continue
 					} else {
-						self.ReOpen()
+						t.ReOpen()
 					}
 				}
 
 			case err != nil && err != io.EOF:
-				time.Sleep(time.Duration(self.interval) * time.Millisecond)
-				logger.Error("<Read file error:%v,%v>", line, err)
-				self.ReOpen()
+				time.Sleep(time.Duration(t.interval) * time.Millisecond)
+				log.Error("<Read file error:%v,%v>", line, err)
+				t.ReOpen()
 				continue
 			default:
 				msg := bytes.TrimRight(line, "\n")
-				self.line <- msg
-				self.seek += int64(len(line))
+				t.line <- msg
+				t.seek += int64(len(line))
 			}
 		}
 	}()
 }
 
-func (self *Tail) NextLine() chan []byte {
-	return self.line
+// NextLine nextline
+func (t *Tail) NextLine() chan []byte {
+	return t.line
 }
 
-func (self *Tail) Read(p []byte) (int, error) {
-	msg, ok := <-self.line
+// Read read
+func (t *Tail) Read(p []byte) (int, error) {
+	msg, ok := <-t.line
 	if !ok {
 		return 0, fmt.Errorf("file is closed")
 	}
