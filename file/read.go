@@ -79,10 +79,12 @@ func (t *Tail) ReadLine() {
 		offset, err := t.TrancateOffsetByLF(t.seek)
 		if err != nil {
 			log.Error("<Trancate offset:%d,Error:%+v>", t.seek, err)
+			return
 		}
 		err = t.Seek(offset)
 		if err != nil {
 			log.Error("<seek offset[%d] error:%+v>", t.seek, err)
+			return
 		}
 
 		for {
