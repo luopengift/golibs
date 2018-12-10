@@ -56,8 +56,7 @@ func (t *Tail) Close() error {
 // ReOpen re open
 func (t *Tail) ReOpen() error {
 	if err := t.File.Close(); err != nil {
-		log.Error("<file %v close fail:%v>", t.name, err)
-		return err
+		return log.Errorf("name: %v, %v", t.name, err)
 	}
 	t.name = t.Handler.Handle(t.cname)
 	err := t.Open()
@@ -77,7 +76,6 @@ func (t *Tail) Stop() {
 // ReadLine read line
 func (t *Tail) ReadLine() {
 	go func() {
-
 		offset, err := t.TrancateOffsetByLF(t.seek)
 		if err != nil {
 			log.Error("<Trancate offset:%d,Error:%+v>", t.seek, err)
@@ -92,7 +90,7 @@ func (t *Tail) ReadLine() {
 			switch {
 			case err == io.EOF:
 				if t.endstop {
-					log.Info("<file %s is END:%+v>", t.name, err)
+					//log.Info("<file %s is END:%+v>", t.name, err)
 					t.Stop()
 					return
 				}
@@ -113,7 +111,7 @@ func (t *Tail) ReadLine() {
 
 			case err != nil && err != io.EOF:
 				time.Sleep(time.Duration(t.interval) * time.Millisecond)
-				log.Error("<Read file error:%v,%v>", line, err)
+				//log.Error("<Read file error:%v,%v>", line, err)
 				t.ReOpen()
 				continue
 			default:

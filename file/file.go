@@ -44,10 +44,6 @@ func (f *File) BaseName() string {
 // Open open
 func (f *File) Open() (err error) {
 	f.fd, err = os.OpenFile(f.name, f.model, 0660)
-	if err != nil {
-		log.Error("<file %s can not open>:%v", f.name, err)
-		return
-	}
 	return
 }
 
