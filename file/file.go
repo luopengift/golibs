@@ -131,17 +131,17 @@ func (f *File) ReadAll() (file []byte, err error) {
 }
 
 // IsSameFile IsSameFile
-func (f *File) IsSameFile(file string) bool {
+func (f *File) IsSameFile(file string) (bool, error) {
 	stat1, err := os.Stat(file)
 	if err != nil {
 		log.Warn("SameFile error:%v", err)
-		return false
+		return false, err
 	}
 	stat2, err := f.fd.Stat()
 	if err != nil {
 		log.Warn("SameFile error:%v", err)
-		return false
+		return false, err
 	}
-	return os.SameFile(stat1, stat2)
+	return os.SameFile(stat1, stat2), nil
 
 }

@@ -36,7 +36,7 @@ func NewTail(cname string, handler Handler) *Tail {
 	tail.cname = cname
 	tail.line = make(chan []byte, 1)
 	tail.reader = bufio.NewReader(file.fd)
-	tail.interval = 1000 //ms
+	tail.interval = 3000 //ms
 	tail.endstop = false
 	tail.Handler = handler
 	return tail
@@ -98,9 +98,12 @@ func (t *Tail) ReadLine() {
 				}
 				time.Sleep(time.Duration(t.interval) * time.Millisecond)
 				if t.name == t.cname {
-					if t.IsSameFile(t.name) {
+					ok, err := t.IsSameFile(t.name)
+					if err != nil {
+						log.Error("%v", err)
 						continue
-					} else {
+					}
+					if !ok {
 						t.ReOpen()
 					}
 				} else {
